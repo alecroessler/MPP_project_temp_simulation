@@ -8,7 +8,7 @@
 
 // Set up parameters
 const int GRID_SIZE = 256;
-const char* POWER_MAP_FILE = "../data/power_map_128.csv";
+const char* POWER_MAP_FILE = "../data/power_map_256.csv";
 const double T_amb = 25 + 273.15;  // Ambient temperature in Kelvin
 const int ITERATIONS = 10000;
 const double DIE_WIDTH_M = 0.016;
