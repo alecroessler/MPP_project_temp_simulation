@@ -10,4 +10,5 @@ cd $PBS_O_WORKDIR
 
 echo "Running on node: $(hostname)"
 
-./test
+./simulation
+
