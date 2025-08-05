@@ -1,0 +1,13 @@
+#!/bin/bash
+#PBS -q batch
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=00:30:00
+#PBS -N test_job
+#PBS -j oe
+#PBS -o output.log
+
+cd $PBS_O_WORKDIR
+
+echo "Running on node: $(hostname)"
+
+./test
