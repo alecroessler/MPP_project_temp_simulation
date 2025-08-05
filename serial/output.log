@@ -1,3 +1,15 @@
 Running on node: n007
+Current working directory: /home/roesslera/code/MPP_project_temp_simulation/serial
+List of files in current dir:
+total 771
+-rw------- 1 roesslera elc5396_summer_2025    68 Aug  5 16:16 output.log
+-rw-r--r-- 1 roesslera elc5396_summer_2025   322 Aug  5 16:19 run_cpu.pbs
+-rwxr-xr-x 1 roesslera elc5396_summer_2025 18592 Aug  5 16:11 simulation
+-rw-r--r-- 1 roesslera elc5396_summer_2025   966 Aug  5 16:10 simulation.c
+-rwxr-xr-x 1 roesslera elc5396_summer_2025 18096 Aug  5 11:54 test
+-rw-r--r-- 1 roesslera elc5396_summer_2025    72 Aug  5 11:34 test.c
+List of files in ../data:
+total 768
+-rw-r--r-- 1 roesslera elc5396_summer_2025 295900 Aug  5 12:18 power_map_128.csv
 Error opening file:
 Failed to load power map.
