@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
+
 
 
 
@@ -56,7 +58,7 @@ double max_temp(double arr[GRID_SIZE][GRID_SIZE]) {
             if (arr[i][j] > max_val) max_val = arr[i][j];
         }
     }
-    return max_val;
+    return max_val - 273.15; 
 }
 
 double min_temp(double arr[GRID_SIZE][GRID_SIZE]) {
@@ -66,7 +68,7 @@ double min_temp(double arr[GRID_SIZE][GRID_SIZE]) {
             if (arr[i][j] < min_val) min_val = arr[i][j];
         }
     }
-    return min_val;
+    return min_val - 273.15;
 }
 
 double avg_temp(double arr[GRID_SIZE][GRID_SIZE]) {
@@ -76,7 +78,7 @@ double avg_temp(double arr[GRID_SIZE][GRID_SIZE]) {
             sum += arr[i][j];
         }
     }
-    return sum / (GRID_SIZE * GRID_SIZE);
+    return (sum / (GRID_SIZE * GRID_SIZE)) - 273.15;
 }
 
 
@@ -84,6 +86,8 @@ double avg_temp(double arr[GRID_SIZE][GRID_SIZE]) {
 
 
 int main() {
+    clock_t start_time = clock();
+
     // Initialize arrays for power map and temperatures
     double q[GRID_SIZE][GRID_SIZE];
     double T[GRID_SIZE][GRID_SIZE];
@@ -141,9 +145,14 @@ int main() {
         }
     }
 
-    printf("Max Temp: %.2f K\n", max_temp(T));
-    printf("Min Temp: %.2f K\n", min_temp(T));
-    printf("Avg Temp: %.2f K\n", avg_temp(T));
+    printf("Max Temp: %.2f C\n", max_temp(T));
+    printf("Min Temp: %.2f C\n", min_temp(T));
+    printf("Avg Temp: %.2f C\n", avg_temp(T));
+
+    clock_t end_time = clock();
+
+    double elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+    printf("Elapsed time: %.2f seconds\n", elapsed_time);
 
     return 0;
 }
