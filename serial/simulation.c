@@ -4,7 +4,8 @@
 
 
 const int GRID_SIZE = 128;
-const char* POWER_MAP_FILE = "../data/csvpower_map_128.csv";
+const char* POWER_MAP_FILE = "../data/power_map_128.csv";
+
 
 
 int load_power_map(const char* filename, double q[GRID_SIZE][GRID_SIZE]) {
