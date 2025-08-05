@@ -3,7 +3,8 @@
 
 
 
-CONST int GRID_SIZE = 128;
+const int GRID_SIZE = 128;
+const char* POWER_MAP_FILE = "../data/csvpower_map_128.csv";
 
 
 int load_power_map(const char* filename, double q[GRID_SIZE][GRID_SIZE]) {
@@ -17,7 +18,7 @@ int load_power_map(const char* filename, double q[GRID_SIZE][GRID_SIZE]) {
     // Read file data
     for (int i = 0; i < GRID_SIZE; i++) {
         for (int j = 0; j < GRID_SIZE; j++) {
-            fscanf(file, "%lf,", &q[i][j])
+            fscanf(file, "%lf,", &q[i][j]);
         }
     }
 
@@ -30,7 +31,7 @@ int load_power_map(const char* filename, double q[GRID_SIZE][GRID_SIZE]) {
 int main() {
     double q[GRID_SIZE][GRID_SIZE];
 
-    if (load_power_map("power_map.txt", q) != 0) {
+    if (load_power_map(POWER_MAP_FILE, q) != 0) {
         fprintf(stderr, "Failed to load power map.\n");
         return 1;
     }
