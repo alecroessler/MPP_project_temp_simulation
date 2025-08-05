@@ -10,7 +10,7 @@
 const int GRID_SIZE = 256;
 const char* POWER_MAP_FILE = "../data/power_map_256.csv";
 const double T_amb = 25 + 273.15;  // Ambient temperature in Kelvin
-const int ITERATIONS = 10000;
+const int ITERATIONS = 100000;
 const double DIE_WIDTH_M = 0.016;
 const double DIE_HEIGHT_M = 0.016; 
 const double h = DIE_WIDTH_M / GRID_SIZE;  
@@ -127,7 +127,7 @@ int main() {
         
         // Check for convergence and exit
         double max_change = max_abs_diff(T, T_new);
-        if (max_change < 1e-4) {
+        if (max_change < 1e-3) {
             printf("Converged after %d iterations\n", iter);
             break;
         }
