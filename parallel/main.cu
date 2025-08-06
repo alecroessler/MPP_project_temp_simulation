@@ -9,7 +9,7 @@
 // Set up parameters
 const int GRID_SIZE = 256;
 const int total_size = GRID_SIZE * GRID_SIZE;
-const char* POWER_MAP_FILE = "../data/power_map_256.csv";
+const char* POWER_MAP_FILE = const char* POWER_MAP_FILE = "/home/roesslera/code/MPP_project_temp_simulation/data/power_map_256.csv";
 const double T_amb = 25;  // Ambient temperature in Kelvin
 const int ITERATIONS = 100;
 const double DIE_WIDTH_M = 0.016;
