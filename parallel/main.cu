@@ -3,7 +3,7 @@
 #include "support.h"
 #include "kernel.cu"
 
-__global__ void compute_temperature(double* T, double* T_new, double* q, double k, int grid_size, double h, double T_amb);
+
 
 
 // Set up parameters
@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
     cudaDeviceSynchronize();
     stopTime(&timer); printf("%f s\n", elapsedTime(timer));
 
-    // Launch kernel using standard sgemm interface ---------------------------
+    // Launch kernel ---------------------------
     printf("Launching kernel..."); fflush(stdout);
     startTime(&timer);
     
@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 
     // Launch the kernel
     for (int iter = 0; iter < ITERATIONS; iter++) {
-        compute_temperature<<<gridDim, blockDim>>>(q_d, T_d, T_new_d, GRID_SIZE, h, k);
+        compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
 
