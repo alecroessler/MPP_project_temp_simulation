@@ -12,7 +12,7 @@ const char* POWER_MAP_FILE = "../data/power_map_256.csv";
 const double T_amb = 25 + 273.15;  // Ambient temperature in Kelvin
 const int ITERATIONS = 100000;
 const double DIE_WIDTH_M = 0.016;
-const double DIE_HEIGHT_M = 0.016; 
+//const double DIE_HEIGHT_M = 0.016; 
 const double h = DIE_WIDTH_M / GRID_SIZE;  
 const double k = 150.0; // thermal conductivity (using silicon)
 

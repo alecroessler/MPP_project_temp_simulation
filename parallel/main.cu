@@ -13,7 +13,7 @@ const char* POWER_MAP_FILE = "../data/power_map_256.csv";
 const double T_amb = 25;  // Ambient temperature in Kelvin
 const int ITERATIONS = 100;
 const double DIE_WIDTH_M = 0.016;
-const double DIE_HEIGHT_M = 0.016; 
+//const double DIE_HEIGHT_M = 0.016; 
 const double h = DIE_WIDTH_M / GRID_SIZE;  
 const double k = 150.0; // thermal conductivity (using silicon)
 
@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
     printf("Allocating device variables..."); fflush(stdout);
     startTime(&timer);
 
-    double *diff_d, *q_d, *T_d, *T_new_d;
+    double *q_d, *T_d, *T_new_d;
 
     // CUDA device variables for q, T, and T_new
     cuda_ret = cudaMalloc((void**)&q_d, sizeof(double)* total_size);
