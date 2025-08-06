@@ -90,7 +90,7 @@ double max_temp(double* arr, int grid_size) {
     for (int i = 0; i < grid_size * grid_size; i++) {
         if (arr[i] > max_val) max_val = arr[i];
     }
-    return max_val - 273.15;  // Convert to Celsius if needed
+    return max_val;  
 }
 
 
@@ -99,7 +99,7 @@ double min_temp(double* arr, int grid_size) {
     for (int i = 0; i < grid_size * grid_size; i++) {
         if (arr[i] < min_val) min_val = arr[i];
     }
-    return min_val - 273.15;
+    return min_val;
 }
 
 
@@ -108,6 +108,6 @@ double avg_temp(double* arr, int grid_size) {
     for (int i = 0; i < grid_size * grid_size; i++) {
         sum += arr[i];
     }
-    return (sum / (grid_size * grid_size)) - 273.15;
+    return (sum / (grid_size * grid_size));
 }
 
