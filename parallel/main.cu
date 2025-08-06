@@ -3,6 +3,9 @@
 #include "support.h"
 #include "kernel.cu"
 
+__global__ void compute_temperature(double* T, double* T_new, double* q, double k, int grid_size, double h, double T_amb);
+
+
 // Set up parameters
 const int GRID_SIZE = 256;
 const int total_size = GRID_SIZE * GRID_SIZE;
@@ -19,7 +22,7 @@ int load_power_map(const char* filename, double* q) {
     // Confirm file opens
     FILE* file = fopen(filename, "r");
     if (!file) {
-        fprintf("Error opening file:\n");
+        fprintf(stderr, "Error opening file:\n");
         return 1;
     }
 
@@ -110,7 +113,7 @@ int main(int argc, char* argv[])
 
     // Launch the kernel
     for (int iter = 0; iter < ITERATIONS; iter++) {
-        kernel<<<gridDim, blockDim>>>(q_d, T_d, T_new_d, GRID_SIZE, h, k);
+        compute_temperature<<<gridDim, blockDim>>>(q_d, T_d, T_new_d, GRID_SIZE, h, k);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
 
