@@ -28,13 +28,14 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
     T_new[idx] = (T[top] + T[bottom] + T[left] + T[right] + coeff) / 4.0;
 }
 
-
+/*
 __global__ void compute_diff(double* T, double* T_new, double* diff, int size) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < size) {
         diff[idx] = fabs(T[idx] - T_new[idx]);
     }
 }
+
 
 __global__ void reduce_max(double* input, double* output, int size) {
     extern __shared__ double sdata[];
@@ -71,7 +72,7 @@ __global__ void reduce_max(double* input, double* output, int size) {
     }
 }
 
-
+*/
 
 
 double max_abs_diff(double* a, double* b, int size) {
