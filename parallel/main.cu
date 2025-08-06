@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 
     for (unsigned int i=0; i < total_size; i++) { T_new_h[i] = T_amb; T_h[i] = T_amb; }
     if (load_power_map(POWER_MAP_FILE, q_h) != 0) {
-        fprintf("Failed to load power map.\n");
+        fprintf(stderr, "Failed to load power map.\n");
         return 1;
     }
 
