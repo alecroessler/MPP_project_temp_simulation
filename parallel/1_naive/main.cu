@@ -13,7 +13,6 @@ const char* POWER_MAP_FILE = "/home/roesslera/code/MPP_project_temp_simulation/d
 const double T_amb = 25;  // Ambient temperature in Celcius
 const int ITERATIONS = 50000;
 const double DIE_WIDTH_M = 0.016;
-//const double DIE_HEIGHT_M = 0.016; 
 const double h = DIE_WIDTH_M / GRID_SIZE;  
 const double k = 150.0; // thermal conductivity (using silicon)
 
@@ -40,7 +39,8 @@ int load_power_map(const char* filename, double* q) {
 
 int main(int argc, char* argv[])
 {
-    Timer timer;
+    Timer timer, total_timer;
+    startTime(&total_timer);
     cudaError_t cuda_ret;
 
     // Initialize host variables ----------------------------------------------
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 
     // Allocate device variables ----------------------------------------------
 
-    printf("Allocating device variables...\n"); fflush(stdout);
+    printf("Allocating device variables..."); fflush(stdout);
     startTime(&timer);
 
     double *q_d, *T_d, *T_new_d;
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 
     // Copy host variables to device ------------------------------------------
 
-    printf("Copying data from host to device...\n"); fflush(stdout);
+    printf("Copying data from host to device..."); fflush(stdout);
     startTime(&timer);
 
     // Copy q, T, and T_new from host to device
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
     stopTime(&timer); printf("%f s\n", elapsedTime(timer));
 
     // Launch kernel ---------------------------
-    printf("Launching kernel...\n"); fflush(stdout);
+    printf("Launching kernel..."); fflush(stdout);
     startTime(&timer);
     
     // Define grid and block dimensions
@@ -112,7 +112,8 @@ int main(int argc, char* argv[])
     
 
     // Launch the kernel
-    for (int iter = 0; iter < ITERATIONS; iter++) {
+    int iter = 0;
+    for (iter ; iter < ITERATIONS; iter++) {
         compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
@@ -143,7 +144,7 @@ int main(int argc, char* argv[])
 
     // Copy device variables from host ----------------------------------------
 
-    printf("Copying data from device to host...\n"); fflush(stdout);
+    printf("Copying data from device to host..."); fflush(stdout);
     startTime(&timer);
 
     cuda_ret = cudaMemcpy(T_new_h, T_new_d, sizeof(double)*total_size, cudaMemcpyDeviceToHost);
@@ -152,17 +153,20 @@ int main(int argc, char* argv[])
     cudaDeviceSynchronize();
     stopTime(&timer); printf("%f s\n", elapsedTime(timer));
 
-    printf("Max Temp: %.2f C\n", max_temp(T_new_h, GRID_SIZE));
-    printf("Min Temp: %.2f C\n", min_temp(T_new_h, GRID_SIZE));
-    printf("Avg Temp: %.2f C\n", avg_temp(T_new_h, GRID_SIZE));
+    max_temp_T = max_temp(T_new_h, GRID_SIZE);
+    min_temp_T = min_temp(T_new_h, GRID_SIZE);
+    avg_temp_T = avg_temp(T_new_h, GRID_SIZE);
+
+    printf("Max Temp: %.2f C\n", max_temp_T);
+    printf("Min Temp: %.2f C\n", min_temp_T);
+    printf("Avg Temp: %.2f C\n", avg_temp_T);
 
     // Verify correctness -----------------------------------------------------
-    /*
+    
     printf("Verifying results..."); fflush(stdout);
 
-    verify(A_h, B_h, C_h, matArow, matAcol, matBcol);
-
-    */
+    verify(iter, max_temp_T, min_temp_T, avg_temp_T);
+    
     // Free memory ------------------------------------------------------------
 
     free(q_h);
@@ -173,6 +177,8 @@ int main(int argc, char* argv[])
     cudaFree(q_d);
     cudaFree(T_d);
     cudaFree(T_new_d);
+
+    stopTime(&total_timer); printf("Total Execution Time: %f s\n", elapsedTime(total_timer));
 
 
     return 0;

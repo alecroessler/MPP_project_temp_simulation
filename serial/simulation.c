@@ -12,7 +12,7 @@ const double DIE_WIDTH_M = 0.016; // 16 mm
 const double h = DIE_WIDTH_M / GRID_SIZE;  
 const double k = 150.0; // thermal conductivity (using silicon)
 
-
+// load power map q from CSV file
 int load_power_map(const char* filename, double q[GRID_SIZE][GRID_SIZE]) {
     // Confirm file opens
     FILE* file = fopen(filename, "r");
@@ -32,7 +32,7 @@ int load_power_map(const char* filename, double q[GRID_SIZE][GRID_SIZE]) {
     return 0;
 }
 
-
+// Compute the maximum absolute difference between two temperature grids (element by element)
 double max_abs_diff(double a[GRID_SIZE][GRID_SIZE], double b[GRID_SIZE][GRID_SIZE]) {
     double max_diff = 0.0;
     for (int i = 0; i < GRID_SIZE; i++) {
@@ -46,6 +46,7 @@ double max_abs_diff(double a[GRID_SIZE][GRID_SIZE], double b[GRID_SIZE][GRID_SIZ
     return max_diff;
 }
 
+// Compute the maximum, minimum, and average temperatures in a grid
 double max_temp(double arr[GRID_SIZE][GRID_SIZE]) {
     double max_val = arr[0][0];
     for (int i = 0; i < GRID_SIZE; i++) {
@@ -55,7 +56,6 @@ double max_temp(double arr[GRID_SIZE][GRID_SIZE]) {
     }
     return max_val; 
 }
-
 double min_temp(double arr[GRID_SIZE][GRID_SIZE]) {
     double min_val = arr[0][0];
     for (int i = 0; i < GRID_SIZE; i++) {
@@ -65,7 +65,6 @@ double min_temp(double arr[GRID_SIZE][GRID_SIZE]) {
     }
     return min_val;
 }
-
 double avg_temp(double arr[GRID_SIZE][GRID_SIZE]) {
     double sum = 0.0;
     for (int i = 0; i < GRID_SIZE; i++) {

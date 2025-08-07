@@ -28,52 +28,6 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
     T_new[idx] = (T[top] + T[bottom] + T[left] + T[right] + coeff) / 4.0;
 }
 
-/*
-__global__ void compute_diff(double* T, double* T_new, double* diff, int size) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx < size) {
-        diff[idx] = fabs(T[idx] - T_new[idx]);
-    }
-}
-
-
-__global__ void reduce_max(double* input, double* output, int size) {
-    extern __shared__ double sdata[];
-
-    int tid = threadIdx.x;
-    int idx = blockIdx.x * blockDim.x * 2 + threadIdx.x;
-
-    double max_val = 0.0;
-
-    // Load elements into shared memory (2 elements per thread to optimize)
-    if (idx < size)
-        max_val = input[idx];
-    if (idx + blockDim.x < size) {
-        double other = input[idx + blockDim.x];
-        if (other > max_val)
-            max_val = other;
-    }
-
-    sdata[tid] = max_val;
-    __syncthreads();
-
-    // Do reduction in shared memory
-    for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
-        if (tid < s) {
-            if (sdata[tid + s] > sdata[tid])
-                sdata[tid] = sdata[tid + s];
-        }
-        __syncthreads();
-    }
-
-    // Write the block's maximum to output array
-    if (tid == 0) {
-        output[blockIdx.x] = sdata[0];
-    }
-}
-
-*/
-
 
 double max_abs_diff(double* a, double* b, int size) {
     double max_diff = 0.0;

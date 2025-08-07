@@ -26,32 +26,14 @@ void initVector(unsigned int **vec_h, unsigned int size, unsigned int num_bins)
 
 }
 
-void verify(unsigned int* input, uint8_t* bins, unsigned int num_elements, unsigned int num_bins) {
+void verify(iter, max_temp_T, min_temp_T, avg_temp_T); {
 
-  // Initialize reference
-  uint8_t* bins_ref = (uint8_t*) malloc(num_bins*sizeof(uint8_t));
-  for(unsigned int binIdx = 0; binIdx < num_bins; ++binIdx) {
-      bins_ref[binIdx] = 0;
+  if (( iter == 23754) && (max_temp_T == 100.0) && (min_temp_T == 0.0) && (avg_temp_T == 50.0)) {
+    printf("TEST PASSED\n\n");
+  } else {
+    printf("Verification failed!\n");
+    exit(1);
   }
-
-  // Compute reference bins
-  for(unsigned int i = 0; i < num_elements; ++i) {
-      unsigned int binIdx = input[i];
-      if(bins_ref[binIdx] < 255u) {
-          ++bins_ref[binIdx];
-      }
-  }
-
-  // Compare to reference bins
-  for(unsigned int binIdx = 0; binIdx < num_bins; ++binIdx) {
-      if(bins[binIdx] != bins_ref[binIdx]) {
-        printf("TEST FAILED at bin %u, cpu = %u, gpu = %u\n\n", binIdx, bins_ref[binIdx], bins[binIdx]);
-        exit(0);
-      }
-  }
-  printf("TEST PASSED\n\n");
-
-  free(bins_ref);
 
 }
 
