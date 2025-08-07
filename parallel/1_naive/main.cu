@@ -153,9 +153,9 @@ int main(int argc, char* argv[])
     cudaDeviceSynchronize();
     stopTime(&timer); printf("%f s\n", elapsedTime(timer));
 
-    max_temp_T = max_temp(T_new_h, GRID_SIZE);
-    min_temp_T = min_temp(T_new_h, GRID_SIZE);
-    avg_temp_T = avg_temp(T_new_h, GRID_SIZE);
+    double max_temp_T = max_temp(T_new_h, GRID_SIZE);
+    double min_temp_T = min_temp(T_new_h, GRID_SIZE);
+    double avg_temp_T = avg_temp(T_new_h, GRID_SIZE);
 
     printf("Max Temp: %.2f C\n", max_temp_T);
     printf("Min Temp: %.2f C\n", min_temp_T);
