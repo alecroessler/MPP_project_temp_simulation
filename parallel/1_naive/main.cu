@@ -112,8 +112,8 @@ int main(int argc, char* argv[])
     
 
     // Launch the kernel
-    int iter = 0;
-    for (iter ; iter < ITERATIONS; iter++) {
+    int iter;
+    for (iter = 0; iter < ITERATIONS; iter++) {
         compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
