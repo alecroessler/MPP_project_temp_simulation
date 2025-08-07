@@ -103,7 +103,7 @@ int main() {
 
     clock_t setup_time = clock();
     double setup_elapsed = (double)(setup_time - start_time) / CLOCKS_PER_SEC;
-    printf("Setup and allocation time: %.2f seconds\n", setup_elapsed);
+    printf("Setup and initialize time: %.2f seconds\n", setup_elapsed);
 
 
     // Jacobi discrete heat equation (propogation simulation loop)
