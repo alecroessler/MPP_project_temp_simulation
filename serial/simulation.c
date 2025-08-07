@@ -159,7 +159,7 @@ int main() {
 
 
     // Save results to csv file
-    FILE* file = fopen(results, "w");
+    FILE* file = fopen("/home/roesslera/code/MPP_project_temp_simulation/series/results.csv", "w");
 
     for (int i = 0; i < grid_size; i++) {
         for (int j = 0; j < grid_size; j++) {
