@@ -130,7 +130,7 @@ int main() {
             break;
         }
 
-        double max_temp = max_temp(T_new);
+        double max_temperature = max_temp(T_new);
         if (iter % 1000 == 0) {
             printf("Iteration %d: max change = %.5f, max temp = %.5f\n", iter, max_change, max_temp);
         }
@@ -161,10 +161,10 @@ int main() {
     // Save results to csv file
     FILE* file = fopen("/home/roesslera/code/MPP_project_temp_simulation/series/results.csv", "w");
 
-    for (int i = 0; i < grid_size; i++) {
-        for (int j = 0; j < grid_size; j++) {
-            fprintf(file, "%.6f", T[i * grid_size + j]);
-            if (j < grid_size - 1) {
+    for (int i = 0; i < GRID_SIZE; i++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
+            fprintf(file, "%.6f", T[i * GRID_SIZE + j]);
+            if (j < GRID_SIZE - 1) {
                 fprintf(file, ",");
             }
         }
