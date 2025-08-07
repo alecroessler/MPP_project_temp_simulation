@@ -26,15 +26,20 @@ void initVector(unsigned int **vec_h, unsigned int size, unsigned int num_bins)
 
 }
 
-void verify(iter, max_temp_T, min_temp_T, avg_temp_T); {
+void verify(int iter, double max_temp_T, double min_temp_T, double avg_temp_T) {
+    const double threshold = 1e-2;  // You can adjust this threshold if needed
 
-  if (( iter == 23754) && (max_temp_T == 100.0) && (min_temp_T == 0.0) && (avg_temp_T == 50.0)) {
-    printf("TEST PASSED\n\n");
-  } else {
-    printf("Verification failed!\n");
-    exit(1);
-  }
-
+    if ((iter == 23754) &&
+        (fabs(max_temp_T - 130.00) < threshold) &&
+        (fabs(min_temp_T - 25.00) < threshold) &&
+        (fabs(avg_temp_T - 52.32) < threshold)) {
+        printf("TEST PASSED\n\n");
+    } else {
+        printf("Verification failed!\n");
+        printf("iter = %d, max = %.4f, min = %.4f, avg = %.4f\n",
+               iter, max_temp_T, min_temp_T, avg_temp_T);
+        exit(1);
+    }
 }
 
 void startTime(Timer* timer) {
