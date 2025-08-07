@@ -7,7 +7,7 @@
 const int GRID_SIZE = 256;
 const char* POWER_MAP_FILE = "../data/power_map_256.csv";
 const double T_amb = 25;  // Ambient temperature in Celcius
-const int ITERATIONS = 100000;
+const int ITERATIONS = 50000;
 const double DIE_WIDTH_M = 0.016; // 16 mm
 const double h = DIE_WIDTH_M / GRID_SIZE;  
 const double k = 150.0; // thermal conductivity (using silicon)
