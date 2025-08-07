@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
             break;
         }
         
-        if (iter % 100 == 0) {
+        if (iter % 1000 == 0) {
             printf("Iteration %d: max change = %.5f\n", iter, max_change);
         }
         

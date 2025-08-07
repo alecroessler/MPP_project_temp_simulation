@@ -130,8 +130,9 @@ int main() {
             break;
         }
 
-        if (iter % 100 == 0) {
-            printf("Iteration %d: max change = %.5f\n", iter, max_change);
+        double max_temp = max_temp(T_new);
+        if (iter % 1000 == 0) {
+            printf("Iteration %d: max change = %.5f, max temp = %.5f\n", iter, max_change, max_temp);
         }
 
 
@@ -155,6 +156,22 @@ int main() {
 
     double elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
     printf("Total Execution time: %.2f seconds\n", elapsed_time);
+
+
+    // Save results to csv file
+    FILE* file = fopen(results, "w");
+
+    for (int i = 0; i < grid_size; i++) {
+        for (int j = 0; j < grid_size; j++) {
+            fprintf(file, "%.6f", T[i * grid_size + j]);
+            if (j < grid_size - 1) {
+                fprintf(file, ",");
+            }
+        }
+        fprintf(file, "\n");
+    }
+
+    fclose(file);
 
     return 0;
 }
