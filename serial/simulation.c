@@ -17,7 +17,7 @@ int load_power_map(const char* filename, double q[GRID_SIZE][GRID_SIZE]) {
     // Confirm file opens
     FILE* file = fopen(filename, "r");
     if (!file) {
-        fprintf("Error opening file:\n");
+        printf("Error opening file:\n");
         return 1;
     }
 
@@ -90,7 +90,7 @@ int main() {
 
     // Load the power map from the CSV file
     if (load_power_map(POWER_MAP_FILE, q) != 0) {
-        fprintf("Failed to load power map.\n");
+        printf("Failed to load power map.\n");
         return 1;
     }
 
