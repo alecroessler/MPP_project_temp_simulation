@@ -126,7 +126,7 @@ for name, w_m, h_m, x_m, y_m in floorplan:
 
 
 
-# === Compute power density map ===
+# Compute power density map
 DIE_WIDTH_M = 0.016
 DIE_HEIGHT_M = 0.016
 pixel_area = (DIE_WIDTH_M * DIE_HEIGHT_M) / (GRID_SIZE * GRID_SIZE)  # m^2
@@ -144,9 +144,14 @@ print("Total power (W):", np.sum(power_map))
 plt.figure(figsize=(10, 10))
 plt.imshow(power_density_map, cmap='hot', interpolation='nearest', origin='lower')
 plt.colorbar(label="Power Density (W/m^3)")
-plt.title("Power Density Map (for Thermal Simulation)")
+plt.title("Power Density Map")
 plt.xlabel("Grid X")
 plt.ylabel("Grid Y")
+
+# Save the figure as a PNG file
+plt.savefig("power map generation/power_density_map.png", dpi=300, bbox_inches='tight')
+
+
 plt.show()
 
 # Save power density map to CSV

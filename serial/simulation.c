@@ -3,19 +3,14 @@
 #include <math.h>
 #include <time.h>
 
-
-
-
 // Set up parameters
 const int GRID_SIZE = 256;
 const char* POWER_MAP_FILE = "../data/power_map_256.csv";
-const double T_amb = 25 + 273.15;  // Ambient temperature in Kelvin
+const double T_amb = 25;  // Ambient temperature in Celcius
 const int ITERATIONS = 100000;
-const double DIE_WIDTH_M = 0.016;
-//const double DIE_HEIGHT_M = 0.016; 
+const double DIE_WIDTH_M = 0.016; // 16 mm
 const double h = DIE_WIDTH_M / GRID_SIZE;  
 const double k = 150.0; // thermal conductivity (using silicon)
-
 
 
 int load_power_map(const char* filename, double q[GRID_SIZE][GRID_SIZE]) {
@@ -58,7 +53,7 @@ double max_temp(double arr[GRID_SIZE][GRID_SIZE]) {
             if (arr[i][j] > max_val) max_val = arr[i][j];
         }
     }
-    return max_val - 273.15; 
+    return max_val; 
 }
 
 double min_temp(double arr[GRID_SIZE][GRID_SIZE]) {
@@ -68,7 +63,7 @@ double min_temp(double arr[GRID_SIZE][GRID_SIZE]) {
             if (arr[i][j] < min_val) min_val = arr[i][j];
         }
     }
-    return min_val - 273.15;
+    return min_val;
 }
 
 double avg_temp(double arr[GRID_SIZE][GRID_SIZE]) {
@@ -78,7 +73,7 @@ double avg_temp(double arr[GRID_SIZE][GRID_SIZE]) {
             sum += arr[i][j];
         }
     }
-    return (sum / (GRID_SIZE * GRID_SIZE)) - 273.15;
+    return (sum / (GRID_SIZE * GRID_SIZE));
 }
 
 
@@ -107,6 +102,10 @@ int main() {
         }
     }
 
+    clock_t setup_time = clock();
+    double setup_elapsed = (double)(setup_time - start_time) / CLOCKS_PER_SEC;
+    printf("Setup and allocation time: %.2f seconds\n", setup_elapsed);
+
 
     // Jacobi discrete heat equation (propogation simulation loop)
     for (int iter = 0; iter < ITERATIONS; iter++) {
@@ -117,7 +116,7 @@ int main() {
             }
         }
 
-        // Apply Dirichlet boundary conditions (fixed ambient temperature)
+        // Apply Dirichlet boundary conditions (fixed ambient temperature of 25 degrees Celsius)
         for (int i = 0; i < GRID_SIZE; i++) {
             T_new[i][0] = T_amb;
             T_new[i][GRID_SIZE - 1] = T_amb;
@@ -145,14 +144,18 @@ int main() {
         }
     }
 
-    printf("Max Temp: %.2f C\n", max_temp(T));
-    printf("Min Temp: %.2f C\n", min_temp(T));
-    printf("Avg Temp: %.2f C\n", avg_temp(T));
+    clock_t simulation_time = clock();
+    double simulation_elapsed = (double)(simulation_time - setup_time) / CLOCKS_PER_SEC;
+    printf("Simulation time: %.2f seconds\n", simulation_elapsed);
+
+    printf("Max Temp: %.2f C\n", max_temp(T_new));
+    printf("Min Temp: %.2f C\n", min_temp(T_new));
+    printf("Avg Temp: %.2f C\n", avg_temp(T_new));
 
     clock_t end_time = clock();
 
     double elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
-    printf("Elapsed time: %.2f seconds\n", elapsed_time);
+    printf("Total Execution time: %.2f seconds\n", elapsed_time);
 
     return 0;
 }
