@@ -126,7 +126,7 @@ int main() {
         
         // Check for convergence and exit
         double max_change = max_abs_diff(T, T_new);
-        if (max_change < 1e-3) {
+        if (max_change < 1e-2) {
             printf("Converged after %d iterations\n", iter);
             break;
         }
