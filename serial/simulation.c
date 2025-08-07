@@ -159,7 +159,7 @@ int main() {
 
 
     // Save results to csv file
-    FILE* file = fopen("/home/roesslera/code/MPP_project_temp_simulation/series/results.csv", "w");
+    FILE* file = fopen("/home/roesslera/code/MPP_project_temp_simulation/data/results.csv", "w");
     if (!file) {
         printf("Error opening results file for writing.\n");
         return 1;
