@@ -24,10 +24,10 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
         s_T[shared_y][0] = (halo_x >= 0 && halo_y < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
     }
     // Right halo
-    if (threadIdx.x == BLOCK_DIM_X - 1) {
+    if (threadIdx.x == 15) {
         int halo_x = x + 1;
         int halo_y = y;
-        s_T[shared_y][BLOCK_DIM_X + 1] = (halo_x < grid_size && halo_y < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
+        s_T[shared_y][17] = (halo_x < grid_size && halo_y < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
     }
     // Top halo
     if (threadIdx.y == 0) {
@@ -36,10 +36,10 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
         s_T[0][shared_x] = (halo_y >= 0 && halo_x < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
     }
     // Bottom halo
-    if (threadIdx.y == BLOCK_DIM_Y - 1) {
+    if (threadIdx.y == 15) {
         int halo_x = x;
         int halo_y = y + 1;
-        s_T[BLOCK_DIM_Y + 1][shared_x] = (halo_y < grid_size && halo_x < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
+        s_T[17][shared_x] = (halo_y < grid_size && halo_x < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
     }
 
     __syncthreads();
