@@ -14,8 +14,8 @@ const double h = DIE_WIDTH_M / GRID_SIZE;
 const double k = 150.0; // thermal conductivity (using silicon)
 
 // For reduction kernel: hardcoded since we know the values and can keep structure of program in tact
-const int BLOCKS = 256; // (GRID_SIZE * GRID_SIZE + threads_per_block - 1) / threads_per_block
-const int THREADS_PER_BLOCK = 16; // (GRID_SIZE * GRID_SIZE + threads_per_block - 1) / threads_per_block
+const int THREADS_PER_BLOCK = 256; // blockDim.x * blockDim.y
+const int BLOCKS = 257; // (GRID_SIZE * GRID_SIZE + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
 int load_power_map(const char* filename, double* q) {
     // Confirm file opens
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     q_h = (double*) malloc( sizeof(double) * total_size );
     T_h = (double*) malloc( sizeof(double) * total_size );
     T_new_h = (double*) malloc( sizeof(double) * total_size );
-    max_diff_h = (double*) malloc(sizeof(double) * blocks);
+    max_diff_h = (double*) malloc(sizeof(double) * BLOCKS);
 
 
     for (unsigned int i=0; i < total_size; i++) { T_new_h[i] = T_amb; T_h[i] = T_amb; }
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
     if(cuda_ret != cudaSuccess) FATAL("Unable to allocate device memory for T_new_d");
 
     // Allocate device variable for max_diff
-    cudaMalloc(&max_diff_d, blocks * sizeof(double));
+    cudaMalloc(&max_diff_d, BLOCKS * sizeof(double));
 
 
 
@@ -123,19 +123,19 @@ int main(int argc, char* argv[])
 
         // Launch reduction kernel to compute maximum difference
         startTime(&timer_max_device);
-        max_diff_reduction<<<blocks, blockDim>>>(T_d, T_new_d, max_diff_d, total_size);
+        max_diff_reduction<<<BLOCKS, blockDim>>>(T_d, T_new_d, max_diff_d, total_size);
         cudaDeviceSynchronize();
         stopTime(&timer_max_device); t_max_device += elapsedTime(timer_max_device);
 
         // Copy max_diff_d from device to host
         startTime(&timer_copy);
-        cudaMemcpy(max_diff_h, max_diff_d, sizeof(double) * blocks, cudaMemcpyDeviceToHost);
+        cudaMemcpy(max_diff_h, max_diff_d, sizeof(double) * BLOCKS, cudaMemcpyDeviceToHost);
         stopTime(&timer_copy); t_copy += elapsedTime(timer_copy);
 
         // Complete reduction on host
         startTime(&timer_max_host);
         double max_change = 0.0;
-        for (int i = 0; i < blocks; i++) {
+        for (int i = 0; i < BLOCKS; i++) {
             if (max_diff_h[i] > max_change) {
                 max_change = max_diff_h[i];
             }
