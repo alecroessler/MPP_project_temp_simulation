@@ -114,22 +114,22 @@ int main(int argc, char* argv[])
     // Launch the kernel
     int iter;
     for (iter = 0; iter < ITERATIONS; iter++) {
-        startTime(&timer_kernel);/////////////////////////////////////////////////////////////////////
+        startTime(&timer_kernel);
         compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
-        stopTime(&timer_kernel); t_kernel += elapsedTime(timer_kernel);////////////////////////////////////////
+        stopTime(&timer_kernel); t_kernel += elapsedTime(timer_kernel);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
 
 
         // Copy T and T_new to host to check convergence
-        startTime(&timer_copy);/////////////////////////////////////////////////////////////////////
-        cudaMemcpy(T_h, T_d, sizeof(double) * total_size, cudaMemcpyDeviceToHost);
+        startTime(&timer_copy);
+        //cudaMemcpy(T_h, T_d, sizeof(double) * total_size, cudaMemcpyDeviceToHost);
         cudaMemcpy(T_new_h, T_new_d, sizeof(double) * total_size, cudaMemcpyDeviceToHost);
-        stopTime(&timer_copy); t_copy += elapsedTime(timer_copy);////////////////////////////////////////
+        stopTime(&timer_copy); t_copy += elapsedTime(timer_copy);
 
-        startTime(&timer_max);/////////////////////////////////////////////////////////////////////
+        startTime(&timer_max);
         double max_change = max_abs_diff(T_h, T_new_h, total_size);
-        stopTime(&timer_max); t_max += elapsedTime(timer_max);////////////////////////////////////////
+        stopTime(&timer_max); t_max += elapsedTime(timer_max);
         
 
         if (max_change < 1e-3) {
@@ -148,7 +148,6 @@ int main(int argc, char* argv[])
     }
 
     cuda_ret = cudaDeviceSynchronize();
-    //stopTime(&timer); printf("%f s\n", elapsedTime(timer));
 
     // Copy device variables from host ----------------------------------------
 
@@ -186,9 +185,9 @@ int main(int argc, char* argv[])
     cudaFree(T_d);
     cudaFree(T_new_d);
 
-    printf("Temperature array copy time to host for convergence check: %.3f s\n", t_copy);
-    printf("Time for finding maximum difference for convergence check: %.3f s\n", t_max);
-    printf("Kernel execution time: %.3f s\n", t_kernel);
+    printf("Temperature array copy time to host for convergence check: %.5f s\n", t_copy);
+    printf("Time for finding maximum difference for convergence check: %.5f s\n", t_max);
+    printf("Kernel execution time: %.5f s\n", t_kernel);
 
     stopTime(&total_timer); printf("Total Execution Time: %f s\n", elapsedTime(total_timer));
 
