@@ -3,9 +3,6 @@
 #include "support.h"
 #include "kernel.cu"
 
-
-
-
 // Set up parameters
 const int GRID_SIZE = 256;
 const int total_size = GRID_SIZE * GRID_SIZE;
@@ -15,7 +12,6 @@ const int ITERATIONS = 50000;
 const double DIE_WIDTH_M = 0.016;
 const double h = DIE_WIDTH_M / GRID_SIZE;  
 const double k = 150.0; // thermal conductivity (using silicon)
-
 
 int load_power_map(const char* filename, double* q) {
     // Confirm file opens
@@ -33,8 +29,6 @@ int load_power_map(const char* filename, double* q) {
     fclose(file);
     return 0;
 }
-
-
 
 
 int main(int argc, char* argv[])
@@ -108,9 +102,6 @@ int main(int argc, char* argv[])
     dim3 blockDim(16, 16);
     dim3 gridDim((GRID_SIZE + blockDim.x - 1) / blockDim.x, (GRID_SIZE + blockDim.y - 1) / blockDim.y);
 
-
-    
-
     // Launch the kernel
     int iter;
     for (iter = 0; iter < ITERATIONS; iter++) {
@@ -167,7 +158,6 @@ int main(int argc, char* argv[])
     // Verify correctness -----------------------------------------------------
     
     printf("Verifying results..."); fflush(stdout);
-
     verify(iter, max_temp_T, min_temp_T, avg_temp_T);
     
     // Free memory ------------------------------------------------------------
@@ -187,8 +177,5 @@ int main(int argc, char* argv[])
 
     stopTime(&total_timer); printf("Total Execution Time: %f s\n", elapsedTime(total_timer));
 
-
     return 0;
-
-    
 }

@@ -1,7 +1,7 @@
 NVCC        = nvcc
 NVCC_FLAGS  = -O3 -I/usr/local/cuda/include -arch=sm_70
 LD_FLAGS    = -lcudart -L/usr/local/cuda/lib64
-EXE	        = histogram
+EXE	        = simulation
 OBJ	        = main.o support.o
 
 default: $(EXE)

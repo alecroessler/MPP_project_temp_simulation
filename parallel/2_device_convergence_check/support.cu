@@ -26,33 +26,20 @@ void initVector(unsigned int **vec_h, unsigned int size, unsigned int num_bins)
 
 }
 
-void verify(unsigned int* input, uint8_t* bins, unsigned int num_elements, unsigned int num_bins) {
+void verify(int iter, double max_temp_T, double min_temp_T, double avg_temp_T) {
+    const double threshold = 1e-2;  // You can adjust this threshold if needed
 
-  // Initialize reference
-  uint8_t* bins_ref = (uint8_t*) malloc(num_bins*sizeof(uint8_t));
-  for(unsigned int binIdx = 0; binIdx < num_bins; ++binIdx) {
-      bins_ref[binIdx] = 0;
-  }
-
-  // Compute reference bins
-  for(unsigned int i = 0; i < num_elements; ++i) {
-      unsigned int binIdx = input[i];
-      if(bins_ref[binIdx] < 255u) {
-          ++bins_ref[binIdx];
-      }
-  }
-
-  // Compare to reference bins
-  for(unsigned int binIdx = 0; binIdx < num_bins; ++binIdx) {
-      if(bins[binIdx] != bins_ref[binIdx]) {
-        printf("TEST FAILED at bin %u, cpu = %u, gpu = %u\n\n", binIdx, bins_ref[binIdx], bins[binIdx]);
-        exit(0);
-      }
-  }
-  printf("TEST PASSED\n\n");
-
-  free(bins_ref);
-
+    if ((iter == 23754) &&
+        (fabs(max_temp_T - 130.00) < threshold) &&
+        (fabs(min_temp_T - 25.00) < threshold) &&
+        (fabs(avg_temp_T - 52.32) < threshold)) {
+        printf("TEST PASSED\n\n");
+    } else {
+        printf("Verification failed!\n");
+        printf("iter = %d, max = %.4f, min = %.4f, avg = %.4f\n",
+               iter, max_temp_T, min_temp_T, avg_temp_T);
+        exit(1);
+    }
 }
 
 void startTime(Timer* timer) {
