@@ -1,92 +1,69 @@
 // Kernel algorithm for temperature computation
 __global__ void compute_temperature(double* T, double* T_new, double* q, double k, 
     int grid_size, double h, double T_amb) {
-
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    // Shared memory size with 1 cell halo around blockDim.x/y
-    // Padding to avoid bank conflicts: add +1 to second dim
-    __shared__ double s_T[18][19]; // 16+2 =18, padded 19
+    int shared_x = threadIdx.x + 1; // +1 for halo
+    int shared_y = threadIdx.y + 1; 
 
-    int shared_x = threadIdx.x + 1; // +1 for halo offset
-    int shared_y = threadIdx.y + 1;
+    __shared__ double s_T[18][19]; // (blockDim.x + 2 x blockDim.y + 2) including halos
 
-    // Load center cell
+    // Boundary check and load center cell
     if (x < grid_size && y < grid_size) {
         s_T[shared_y][shared_x] = T[y * grid_size + x];
     } else {
         s_T[shared_y][shared_x] = T_amb;
     }
 
-    // Now load halos cooperatively:
 
-    // Threads on left edge load left halo
+    // Load halos: left
     if (threadIdx.x == 0) {
         int halo_x = x - 1;
         int halo_y = y;
-        if (halo_x >= 0 && halo_y < grid_size) {
-            s_T[shared_y][0] = T[halo_y * grid_size + halo_x];
-        } else {
-            s_T[shared_y][0] = T_amb;
-        }
+        s_T[shared_y][0] = (halo_x >= 0 && halo_y < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
     }
-
-    // Threads on right edge load right halo
-    if (threadIdx.x == blockDim.x - 1) {
+    // Right halo
+    if (threadIdx.x == 15) {
         int halo_x = x + 1;
         int halo_y = y;
-        if (halo_x < grid_size && halo_y < grid_size) {
-            s_T[shared_y][blockDim.x + 1] = T[halo_y * grid_size + halo_x];
-        } else {
-            s_T[shared_y][blockDim.x + 1] = T_amb;
-        }
+        s_T[shared_y][17] = (halo_x < grid_size && halo_y < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
     }
-
-    // Threads on top edge load top halo
+    // Top halo
     if (threadIdx.y == 0) {
         int halo_x = x;
         int halo_y = y - 1;
-        if (halo_y >= 0 && halo_x < grid_size) {
-            s_T[0][shared_x] = T[halo_y * grid_size + halo_x];
-        } else {
-            s_T[0][shared_x] = T_amb;
-        }
+        s_T[0][shared_x] = (halo_y >= 0 && halo_x < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
     }
-
-    // Threads on bottom edge load bottom halo
-    if (threadIdx.y == blockDim.y - 1) {
+    // Bottom halo
+    if (threadIdx.y == 15) {
         int halo_x = x;
         int halo_y = y + 1;
-        if (halo_y < grid_size && halo_x < grid_size) {
-            s_T[blockDim.y + 1][shared_x] = T[halo_y * grid_size + halo_x];
-        } else {
-            s_T[blockDim.y + 1][shared_x] = T_amb;
-        }
+        s_T[17][shared_x] = (halo_y < grid_size && halo_x < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
     }
 
     __syncthreads();
 
-    if (x >= grid_size || y >= grid_size) return;
+    if (x >= grid_size || y >= grid_size) return; // bounds check
 
     int idx = y * grid_size + x;
 
-    // Dirichlet boundaries
+    // Apply Dirichlet boundary conditions
     if (x == 0 || x == grid_size - 1 || y == 0 || y == grid_size - 1) {
         T_new[idx] = T_amb;
         return;
     }
 
-    // Load neighbors from shared memory
+    // Load values for neighbors
     double top = s_T[shared_y - 1][shared_x];
     double bottom = s_T[shared_y + 1][shared_x];
     double left = s_T[shared_y][shared_x - 1];
     double right = s_T[shared_y][shared_x + 1];
 
     double coeff = (h * h / k) * q[idx];
+
     T_new[idx] = (top + bottom + left + right + coeff) / 4.0;
 }
-
 
 // Kernel for reduction to find maximum difference
 __global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, int total_size) {
