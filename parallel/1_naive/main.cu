@@ -39,8 +39,8 @@ int load_power_map(const char* filename, double* q) {
 
 int main(int argc, char* argv[])
 {
-    Timer timer, total_timer, timer_copy, timer_max;
-    float t_copy, t_max;
+    Timer timer, total_timer, timer_copy, timer_max, timer_kernel;
+    float t_copy, t_max, t_kernel;
     startTime(&total_timer);
     cudaError_t cuda_ret;
 
@@ -102,7 +102,6 @@ int main(int argc, char* argv[])
     stopTime(&timer); printf("%f s\n", elapsedTime(timer));
 
     // Launch kernel ---------------------------
-    printf("Launching kernel..."); fflush(stdout);
     startTime(&timer);
     
     // Define grid and block dimensions
@@ -115,7 +114,9 @@ int main(int argc, char* argv[])
     // Launch the kernel
     int iter;
     for (iter = 0; iter < ITERATIONS; iter++) {
+        startTime(&timer_kernel);/////////////////////////////////////////////////////////////////////
         compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
+        stopTime(&timer_kernel); t_kernel += elapsedTime(timer_kernel);////////////////////////////////////////
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
 
@@ -187,6 +188,7 @@ int main(int argc, char* argv[])
 
     printf("Temperature array copy time to host for convergence check: %f s\n", t_copy);
     printf("Time for finding maximum difference for convergence check: %f s\n", t_max);
+    printf("Kernel execution time: %f s\n", t_kernel);
 
     stopTime(&total_timer); printf("Total Execution Time: %f s\n", elapsedTime(total_timer));
 
