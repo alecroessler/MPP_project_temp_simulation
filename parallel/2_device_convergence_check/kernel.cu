@@ -54,16 +54,6 @@ __global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, i
     }
 }
 
-// Compute the maximum absolute difference between two arrays
-double max_abs_diff(double* a, double* b, int size) {
-    double max_diff = 0.0;
-    for (int i = 0; i < size; ++i) {
-        double diff = fabs(a[i] - b[i]);
-        if (diff > max_diff) max_diff = diff;
-    }
-    return max_diff;
-}
-
 
 // Compute the maximum, minimum, and average temperature in the grid
 double max_temp(double* arr, int grid_size) {
