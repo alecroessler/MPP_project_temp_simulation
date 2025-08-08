@@ -25,7 +25,7 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
     T_new[idx] = (T[top] + T[bottom] + T[left] + T[right] + coeff) / 4.0;
 }
 
-__global__ max_diff_reduction(double* T, double* T_new, double* max_diff, int total_size) {
+__global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, int total_size) {
     __shared__ double data[256];
     int local_index = threadIdx.y * blockDim.x + threadIdx.x;
     int global_index = blockIdx.x * blockDim.x * blockDim.y + local_index;

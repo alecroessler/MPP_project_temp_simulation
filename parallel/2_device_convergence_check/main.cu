@@ -13,6 +13,10 @@ const double DIE_WIDTH_M = 0.016;
 const double h = DIE_WIDTH_M / GRID_SIZE;  
 const double k = 150.0; // thermal conductivity (using silicon)
 
+// For reduction kernel: hardcoded since we know the values and can keep structure of program in tact
+const int BLOCKS = 256; // (GRID_SIZE * GRID_SIZE + threads_per_block - 1) / threads_per_block
+const int THREADS_PER_BLOCK = 16; // (GRID_SIZE * GRID_SIZE + threads_per_block - 1) / threads_per_block
+
 int load_power_map(const char* filename, double* q) {
     // Confirm file opens
     FILE* file = fopen(filename, "r");
@@ -76,9 +80,7 @@ int main(int argc, char* argv[])
     cuda_ret = cudaMalloc((void**)&T_new_d, sizeof(double)* total_size);
     if(cuda_ret != cudaSuccess) FATAL("Unable to allocate device memory for T_new_d");
 
-    // Reduction kernel function for maximum difference
-    int threads_per_block = 16; // blockDim.x * blockDim.y
-    int blocks = 256; //(GRID_SIZE * GRID_SIZE + threads_per_block - 1) / threads_per_block
+    // Allocate device variable for max_diff
     cudaMalloc(&max_diff_d, blocks * sizeof(double));
 
 
