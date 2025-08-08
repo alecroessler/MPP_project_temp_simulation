@@ -19,8 +19,8 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
-void compute_temperature(double* T, double* T_new, double* T_diff, double T_amb, int grid_size, double alpha, double dt);
-void max_diff_reduction(double* T_diff, double* max_diff, double* block_max, int N);
+__global__ void compute_temperature(double* T, double* T_new, double* T_diff, double T_amb, int grid_size, double alpha, double dt);
+__global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, int total_size);
 double max_temp(double* T, int N);
 double min_temp(double* T, int N);
 double avg_temp(double* T, int N);
