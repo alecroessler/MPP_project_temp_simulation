@@ -118,11 +118,17 @@ int main(int argc, char* argv[])
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
 
+        stopTime(&timer); printf("%f s\n", elapsedTime(timer));/////////////////////////////////////////////
+
         // Copy T and T_new to host to check convergence
         cudaMemcpy(T_h, T_d, sizeof(double) * total_size, cudaMemcpyDeviceToHost);
         cudaMemcpy(T_new_h, T_new_d, sizeof(double) * total_size, cudaMemcpyDeviceToHost);
 
         double max_change = max_abs_diff(T_h, T_new_h, total_size);
+
+        printf("Copying Temperature array back to host..."); fflush(stdout);//////////////////////////////
+        stopTime(&timer); printf("%f s\n", elapsedTime(timer));////////////////////////////////////////
+        
 
         if (max_change < 1e-3) {
             printf("Converged after %d iterations\n", iter);
@@ -140,7 +146,7 @@ int main(int argc, char* argv[])
     }
 
     cuda_ret = cudaDeviceSynchronize();
-    stopTime(&timer); printf("%f s\n", elapsedTime(timer));
+    //stopTime(&timer); printf("%f s\n", elapsedTime(timer));
 
     // Copy device variables from host ----------------------------------------
 

@@ -1,7 +1,4 @@
-
-
-
-
+// Kernel algorithm
 __global__ void compute_temperature(double* T, double* T_new, double* q, double k, 
     int grid_size, double h, double T_amb) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -28,7 +25,7 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
     T_new[idx] = (T[top] + T[bottom] + T[left] + T[right] + coeff) / 4.0;
 }
 
-
+// Compute the maximum absolute difference between two arrays
 double max_abs_diff(double* a, double* b, int size) {
     double max_diff = 0.0;
     for (int i = 0; i < size; ++i) {
@@ -39,7 +36,7 @@ double max_abs_diff(double* a, double* b, int size) {
 }
 
 
-
+// Compute the maximum, minimum, and average temperature in the grid
 double max_temp(double* arr, int grid_size) {
     double max_val = arr[0];
     for (int i = 0; i < grid_size * grid_size; i++) {
@@ -47,8 +44,6 @@ double max_temp(double* arr, int grid_size) {
     }
     return max_val;  
 }
-
-
 double min_temp(double* arr, int grid_size) {
     double min_val = arr[0];
     for (int i = 0; i < grid_size * grid_size; i++) {
@@ -56,8 +51,6 @@ double min_temp(double* arr, int grid_size) {
     }
     return min_val;
 }
-
-
 double avg_temp(double* arr, int grid_size) {
     double sum = 0.0;
     for (int i = 0; i < grid_size * grid_size; i++) {
