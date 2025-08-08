@@ -4,7 +4,10 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    __shared__ double s_T[blockDim.x + 2][blockDim.y + 2]; // 18 x 18 after including halos
+    int shared_x = threadIdx.x + 1; // +1 for halo
+    int shared_y = threadIdx.y + 1; 
+
+    __shared__ double s_T[18][18]; // (blockDim.x + 2 x blockDim.y + 2) including halos
 
     // Boundary check and load center cell
     if (x < grid_size && y < grid_size) {
@@ -37,8 +40,9 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
         int halo_x = x;
         int halo_y = y + 1;
         s_T[BLOCK_DIM_Y + 1][shared_x] = (halo_y < grid_size && halo_x < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
+    }
 
-    __synchthreads();
+    __syncthreads();
 
     if (x >= grid_size || y >= grid_size) return; // bounds check
 
@@ -58,7 +62,7 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
 
     double coeff = (h * h / k) * q[idx];
 
-    T_new[idx] = (T[top] + T[bottom] + T[left] + T[right] + coeff) / 4.0;
+    T_new[idx] = (top + bottom + left + right + coeff) / 4.0;
 }
 
 // Kernel for reduction to find maximum difference
