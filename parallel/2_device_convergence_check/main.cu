@@ -15,7 +15,7 @@ const double k = 150.0; // thermal conductivity (using silicon)
 
 // For reduction kernel: hardcoded since we know the values and can keep structure of program in tact
 const int THREADS_PER_BLOCK = 256; // blockDim.x * blockDim.y
-const int BLOCKS = 512; // (GRID_SIZE * GRID_SIZE + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+const int BLOCKS = 128; // (GRID_SIZE * GRID_SIZE + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
 int load_power_map(const char* filename, double* q) {
     // Confirm file opens
