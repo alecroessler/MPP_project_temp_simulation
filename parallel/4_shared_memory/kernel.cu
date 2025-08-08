@@ -7,7 +7,7 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
     int shared_x = threadIdx.x + 1; // +1 for halo
     int shared_y = threadIdx.y + 1; 
 
-    __shared__ double s_T[18][18]; // (blockDim.x + 2 x blockDim.y + 2) including halos
+    __shared__ double s_T[18][19]; // (blockDim.x + 2 x blockDim.y + 2) including halos
 
     // Boundary check and load center cell
     if (x < grid_size && y < grid_size) {
