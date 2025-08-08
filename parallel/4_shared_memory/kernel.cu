@@ -1,5 +1,5 @@
 // Kernel algorithm for temperature computation
-__global__ void compute_temperature_multi(double* T, double* T_new, double* q, double k,
+__global__ void compute_temperature(double* T, double* T_new, double* q, double k,
     int grid_size, double h, double T_amb, int elements_per_thread) {
 
     int y = blockIdx.y * blockDim.y + threadIdx.y;
