@@ -38,7 +38,7 @@ int load_power_map(const char* filename, double* q) {
 int main(int argc, char* argv[])
 {
     Timer timer, total_timer, timer_copy, timer_max_device, timer_max_host, timer_kernel;
-    float t_copy = 0, t_max = 0, t_kernel = 0, t_max_host = 0, t_max_device = 0;
+    float t_copy = 0, t_kernel = 0, t_max_host = 0, t_max_device = 0;
     startTime(&total_timer);
     cudaError_t cuda_ret;
 
