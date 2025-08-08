@@ -40,7 +40,7 @@ int load_power_map(const char* filename, double* q) {
 int main(int argc, char* argv[])
 {
     Timer timer, total_timer, timer_copy, timer_max, timer_kernel;
-    float t_copy, t_max, t_kernel;
+    float t_copy = 0, t_max = 0, t_kernel = 0;
     startTime(&total_timer);
     cudaError_t cuda_ret;
 
@@ -186,9 +186,9 @@ int main(int argc, char* argv[])
     cudaFree(T_d);
     cudaFree(T_new_d);
 
-    printf("Temperature array copy time to host for convergence check: %f s\n", t_copy);
-    printf("Time for finding maximum difference for convergence check: %f s\n", t_max);
-    printf("Kernel execution time: %f s\n", t_kernel);
+    printf("Temperature array copy time to host for convergence check: %.3f s\n", t_copy);
+    printf("Time for finding maximum difference for convergence check: %.3f s\n", t_max);
+    printf("Kernel execution time: %.3f s\n", t_kernel);
 
     stopTime(&total_timer); printf("Total Execution Time: %f s\n", elapsedTime(total_timer));
 
