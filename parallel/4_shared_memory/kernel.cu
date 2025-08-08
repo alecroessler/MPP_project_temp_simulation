@@ -4,7 +4,43 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x >= grid_size || y >= grid_size) return;
+    __shared__ double s_T[blockDim.x + 2][blockDim.y + 2]; // 18 x 18 after including halos
+
+    // Boundary check and load center cell
+    if (x < grid_size && y < grid_size) {
+        s_T[shared_y][shared_x] = T[y * grid_size + x];
+    } else {
+        s_T[shared_y][shared_x] = T_amb;
+    }
+
+
+    // Load halos: left
+    if (threadIdx.x == 0) {
+        int halo_x = x - 1;
+        int halo_y = y;
+        s_T[shared_y][0] = (halo_x >= 0 && halo_y < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
+    }
+    // Right halo
+    if (threadIdx.x == BLOCK_DIM_X - 1) {
+        int halo_x = x + 1;
+        int halo_y = y;
+        s_T[shared_y][BLOCK_DIM_X + 1] = (halo_x < grid_size && halo_y < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
+    }
+    // Top halo
+    if (threadIdx.y == 0) {
+        int halo_x = x;
+        int halo_y = y - 1;
+        s_T[0][shared_x] = (halo_y >= 0 && halo_x < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
+    }
+    // Bottom halo
+    if (threadIdx.y == BLOCK_DIM_Y - 1) {
+        int halo_x = x;
+        int halo_y = y + 1;
+        s_T[BLOCK_DIM_Y + 1][shared_x] = (halo_y < grid_size && halo_x < grid_size) ? T[halo_y * grid_size + halo_x] : T_amb;
+
+    __synchthreads();
+
+    if (x >= grid_size || y >= grid_size) return; // bounds check
 
     int idx = y * grid_size + x;
 
@@ -14,11 +50,11 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
         return;
     }
 
-    // Compute 1D indices for neighbors
-    int top    = (y - 1) * grid_size + x;
-    int bottom = (y + 1) * grid_size + x;
-    int left   = y * grid_size + (x - 1);
-    int right  = y * grid_size + (x + 1);
+    // Load values for neighbors
+    double top = s_T[shared_y - 1][shared_x];
+    double bottom = s_T[shared_y + 1][shared_x];
+    double left = s_T[shared_y][shared_x - 1];
+    double right = s_T[shared_y][shared_x + 1];
 
     double coeff = (h * h / k) * q[idx];
 
