@@ -39,7 +39,8 @@ int load_power_map(const char* filename, double* q) {
 
 int main(int argc, char* argv[])
 {
-    Timer timer, total_timer;
+    Timer timer, total_timer, timer_copy, timer_max;
+    float t_copy, t_max;
     startTime(&total_timer);
     cudaError_t cuda_ret;
 
@@ -118,16 +119,16 @@ int main(int argc, char* argv[])
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
 
-        stopTime(&timer); printf("%f s\n", elapsedTime(timer));/////////////////////////////////////////////
 
         // Copy T and T_new to host to check convergence
+        startTime(&timer_copy);/////////////////////////////////////////////////////////////////////
         cudaMemcpy(T_h, T_d, sizeof(double) * total_size, cudaMemcpyDeviceToHost);
         cudaMemcpy(T_new_h, T_new_d, sizeof(double) * total_size, cudaMemcpyDeviceToHost);
+        stopTime(&timer_copy); t_copy += elapsedTime(timer_copy);////////////////////////////////////////
 
+        startTime(&timer_max);/////////////////////////////////////////////////////////////////////
         double max_change = max_abs_diff(T_h, T_new_h, total_size);
-
-        printf("Copying Temperature array back to host..."); fflush(stdout);//////////////////////////////
-        stopTime(&timer); printf("%f s\n", elapsedTime(timer));////////////////////////////////////////
+        stopTime(&timer_max); t_max += elapsedTime(timer_max);////////////////////////////////////////
         
 
         if (max_change < 1e-3) {
@@ -183,6 +184,9 @@ int main(int argc, char* argv[])
     cudaFree(q_d);
     cudaFree(T_d);
     cudaFree(T_new_d);
+
+    printf("Temperature array copy time to host for convergence check: %f s\n", t_copy);
+    printf("Time for finding maximum difference for convergence check: %f s\n", t_max);
 
     stopTime(&total_timer); printf("Total Execution Time: %f s\n", elapsedTime(total_timer));
 
