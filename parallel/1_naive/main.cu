@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
 
         // Copy T and T_new to host to check convergence
         startTime(&timer_copy);
-        //cudaMemcpy(T_h, T_d, sizeof(double) * total_size, cudaMemcpyDeviceToHost);
+        cudaMemcpy(T_h, T_d, sizeof(double) * total_size, cudaMemcpyDeviceToHost);
         cudaMemcpy(T_new_h, T_new_d, sizeof(double) * total_size, cudaMemcpyDeviceToHost);
         stopTime(&timer_copy); t_copy += elapsedTime(timer_copy);
 
@@ -135,10 +135,6 @@ int main(int argc, char* argv[])
         if (max_change < 1e-3) {
             printf("Converged after %d iterations\n", iter);
             break;
-        }
-        
-        if (iter % 1000 == 0) {
-            printf("Iteration %d: max change = %.5f\n", iter, max_change);
         }
         
         // Swap T and T_new pointers
