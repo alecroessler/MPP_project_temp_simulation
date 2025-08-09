@@ -1,1 +1,1 @@
-/home/roesslera/code/MPP_project_temp_simulation/parallel/2_device_convergence_check/simulation
+/home/roesslera/code/MPP_project_temp_simulation/parallel/3_shared_memory2/simulation
