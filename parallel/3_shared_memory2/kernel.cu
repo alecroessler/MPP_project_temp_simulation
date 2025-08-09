@@ -3,7 +3,7 @@
 #include <math.h>
 
 extern "C" __global__
-void compute_temperature_tiled_dynamic(
+void compute_temperature(
     double* T,        // old temperature array (global)
     double* T_new,    // new temperature array (global)
     double* q,        // power map (global)
@@ -171,4 +171,58 @@ void compute_temperature_tiled_dynamic(
     if (local_idx == 0) {
         max_diff[blockId] = sRed[0];
     }
+}
+
+// Kernel for reduction to find maximum difference
+__global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, int total_size) {
+    __shared__ double data[256];
+    int local_index = threadIdx.y * blockDim.x + threadIdx.x;
+    int global_index = blockIdx.x * blockDim.x * blockDim.y + local_index;
+
+
+    // Compute difference for each thread
+    double difference = 0.0;
+    if (global_index < total_size) {
+        difference = fabs(T_new[global_index] - T[global_index]);
+    }
+
+    data[local_index] = difference;
+    __syncthreads();
+
+    // Max reduction
+    for (int stride = 128; stride > 0; stride /= 2) {
+        if (local_index  < stride) {
+            data[local_index] = fmax(data[local_index], data[local_index + stride]);
+        }
+        __syncthreads();
+    }
+
+    // Return the maximum difference at index 0
+    if (local_index  == 0) {
+        max_diff[blockIdx.x] = data[0];
+    }
+}
+
+
+// Compute the maximum, minimum, and average temperature in the grid
+double max_temp(double* arr, int grid_size) {
+    double max_val = arr[0];
+    for (int i = 0; i < grid_size * grid_size; i++) {
+        if (arr[i] > max_val) max_val = arr[i];
+    }
+    return max_val;  
+}
+double min_temp(double* arr, int grid_size) {
+    double min_val = arr[0];
+    for (int i = 0; i < grid_size * grid_size; i++) {
+        if (arr[i] < min_val) min_val = arr[i];
+    }
+    return min_val;
+}
+double avg_temp(double* arr, int grid_size) {
+    double sum = 0.0;
+    for (int i = 0; i < grid_size * grid_size; i++) {
+        sum += arr[i];
+    }
+    return (sum / (grid_size * grid_size));
 }
