@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
 
         // Launch reduction kernel to compute maximum difference
-        int blockSize = 128; // try 128, 256, 512, 1024
+        int blockSize = 512; // try 128, 256, 512, 1024
         int gridSize  = (GRID_SIZE * GRID_SIZE + blockSize - 1) / blockSize;
         startTime(&timer_max_device);
         max_diff_reduction<<<gridSize, blockSize>>>(T_d, T_new_d, max_diff_d, total_size);
