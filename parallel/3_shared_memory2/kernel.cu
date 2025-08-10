@@ -77,9 +77,8 @@ void compute_temperature(double* T, double* T_new, double* q, double k,
     double left   = sTile[sc - 1];
     double right  = sTile[sc + 1];
     double coeff = (h * h / k) * q[idx];
-    double coeff_q = coeff * q[gidx];
 
-    double newT = (top + bottom + left + right + coeff_q) * 0.25;
+    double newT = (top + bottom + left + right + coeff) * 0.25;
     T_new[gidx] = newT;
 }
 
