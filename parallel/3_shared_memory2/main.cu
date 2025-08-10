@@ -115,7 +115,11 @@ int main(int argc, char* argv[])
     int BX = 16;
     int BY = 16;
     dim3 block(BX, BY);
-    dim3 grid((GRID_SIZE + BX - 1)/BX, (GRID_SIZE + BY - 1)/BY);
+    dim3 grid(
+        (GRID_SIZE + BX * ELEMS_PER_THREAD_X - 1) / (BX * ELEMS_PER_THREAD_X),
+        (GRID_SIZE + BY - 1) / BY
+    );
+
 
     // compute shared memory sizes (in doubles)
     int tile_w = BX + 2;
@@ -132,7 +136,7 @@ int main(int argc, char* argv[])
     for (iter = 0; iter < ITERATIONS; iter++) {
         startTime(&timer_kernel);
         // launch kernel
-        compute_temperature<<<grid, block, shared_bytes>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
+        compute_temperature<<<grid, block>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
         stopTime(&timer_kernel); t_kernel += elapsedTime(timer_kernel);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");

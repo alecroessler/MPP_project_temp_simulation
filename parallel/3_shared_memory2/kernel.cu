@@ -2,84 +2,49 @@
 #include <cuda.h>
 #include <math.h>
 
-// compute_temperature_tiled_simple.cu
-extern "C" __global__
-void compute_temperature(double* T, double* T_new, double* q, double k, 
-    int grid_size, double h, double T_amb) 
-{
-    // block/thread ids
-    const int bx = blockDim.x;
-    const int by = blockDim.y;
-    const int tx = threadIdx.x;
-    const int ty = threadIdx.y;
-    const int tid = ty * bx + tx;
-    const int threads_per_block = bx * by;
+#define ELEMS_PER_THREAD_X 4  // tune this (2, 4, maybe 8)
 
-    // top-left global coordinates of the block interior (center region, without halo)
-    const int gx0 = blockIdx.x * bx;
-    const int gy0 = blockIdx.y * by;
+__global__ void compute_temperature_multiX(
+    const double* T,
+    double* T_new,
+    const double* q,
+    double k,
+    int grid_size,
+    double h,
+    double T_amb
+) {
+    // thread's starting coordinates
+    int x_start = (blockIdx.x * blockDim.x + threadIdx.x) * ELEMS_PER_THREAD_X;
+    int y       = blockIdx.y * blockDim.y + threadIdx.y;
 
-    // tile dimensions including 1-cell halo
-    const int tile_w = bx + 2;
-    const int tile_h = by + 2;
-    const int tile_elems = tile_w * tile_h;
+    // precompute constant coeff
+    double hh_over_k = (h * h) / k;
 
-    // dynamic shared memory: tile only
-    extern __shared__ double sTile[]; // size in bytes: sizeof(double) * tile_elems
+    // loop over horizontal strip
+    for (int i = 0; i < ELEMS_PER_THREAD_X; ++i) {
+        int x = x_start + i;
 
-    // cooperative load: each thread loads multiple elements of the shared tile
-    for (int s = tid; s < tile_elems; s += threads_per_block) {
-        int ly = s / tile_w;   // 0 .. tile_h-1
-        int lx = s % tile_w;   // 0 .. tile_w-1
+        if (x >= grid_size || y >= grid_size) return;  // outside domain
 
-        // map tile local coords to global coords:
-        // tile local (1,1) corresponds to global (gx0, gy0)
-        int gx = gx0 + (lx - 1);
-        int gy = gy0 + (ly - 1);
+        int idx = y * grid_size + x;
 
-        double v;
-        if (gx >= 0 && gx < grid_size && gy >= 0 && gy < grid_size) {
-            v = T[gy * grid_size + gx];
-        } else {
-            // outside domain: use Dirichlet ambient
-            v = T_amb;
+        // Apply Dirichlet boundary conditions
+        if (x == 0 || x == grid_size - 1 || y == 0 || y == grid_size - 1) {
+            T_new[idx] = T_amb;
+            continue;
         }
-        sTile[s] = v;
+
+        // Compute 1D indices for neighbors
+        int top    = idx - grid_size;
+        int bottom = idx + grid_size;
+        int left   = idx - 1;
+        int right  = idx + 1;
+
+        double coeff = hh_over_k * q[idx];
+
+        // stencil update
+        T_new[idx] = (T[top] + T[bottom] + T[left] + T[right] + coeff) * 0.25;
     }
-
-    __syncthreads(); // tile fully loaded
-
-    // compute this thread's global coordinate for the interior cell it owns
-    int gx = gx0 + tx;
-    int gy = gy0 + ty;
-
-    if (gx >= grid_size || gy >= grid_size) {
-        // outside domain (thread mapped outside grid) -> nothing to do
-        return;
-    }
-
-    int gidx = gy * grid_size + gx;
-
-    // boundary cells: Dirichlet
-    if (gx == 0 || gx == grid_size - 1 || gy == 0 || gy == grid_size - 1) {
-        T_new[gidx] = T_amb;
-        return;
-    }
-
-    // index in shared tile for center
-    int sx = tx + 1; // 1..bx
-    int sy = ty + 1; // 1..by
-    int sc = sy * tile_w + sx;
-
-    // fetch neighbors from shared memory (no global loads)
-    double top    = sTile[sc - tile_w];
-    double bottom = sTile[sc + tile_w];
-    double left   = sTile[sc - 1];
-    double right  = sTile[sc + 1];
-    double coeff = (h * h / k) * q[gidx];
-
-    double newT = (top + bottom + left + right + coeff) * 0.25;
-    T_new[gidx] = newT;
 }
 
 
