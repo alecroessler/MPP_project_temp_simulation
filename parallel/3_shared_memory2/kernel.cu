@@ -175,7 +175,7 @@ void compute_temperature(
 
 // Kernel for reduction to find maximum difference
 __global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, int total_size) {
-    __shared__ double data[1024];
+    __shared__ double data[128];
     int local_index = threadIdx.y * blockDim.x + threadIdx.x;
     int global_index = blockIdx.x * blockDim.x * blockDim.y + local_index;
 
@@ -190,7 +190,7 @@ __global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, i
     __syncthreads();
 
     // Max reduction
-    for (int stride = 512; stride > 0; stride /= 2) {
+    for (int stride = 64; stride > 0; stride /= 2) {
         if (local_index  < stride) {
             data[local_index] = fmax(data[local_index], data[local_index + stride]);
         }
