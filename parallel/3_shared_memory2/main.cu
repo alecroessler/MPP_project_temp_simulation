@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
     for (iter = 0; iter < ITERATIONS; iter++) {
         startTime(&timer_kernel);
         // launch kernel
-        compute_temperature<<<grid, block, shared_bytes>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb, max_diff_d);
+        compute_temperature<<<grid, block, shared_bytes>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
         stopTime(&timer_kernel); t_kernel += elapsedTime(timer_kernel);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
