@@ -2,81 +2,114 @@
 #include <cuda.h>
 #include <math.h>
 
-#define ELEMS_PER_THREAD_X 8  // tune this (2, 4, maybe 8)
-
-__global__ void compute_temperature(
-    const double* T,
-    double* T_new,
-    const double* q,
+extern "C" __global__
+void compute_temperature_shared_tiled_multi(
+    const double* __restrict__ T,
+    double* __restrict__ T_new,
+    const double* __restrict__ q,
     double k,
     int grid_size,
     double h,
-    double T_amb
-) {
-    // thread's starting coordinates
-    int x_start = (blockIdx.x * blockDim.x + threadIdx.x) * ELEMS_PER_THREAD_X;
-    int y       = blockIdx.y * blockDim.y + threadIdx.y;
+    double T_amb)
+{
+    // Configurable: elements processed per thread horizontally
+    constexpr int ELEMS_PER_THREAD_X = 4;
 
-    // precompute constant coeff
-    double hh_over_k = (h * h) / k;
+    // Block and thread indices
+    const int tx = threadIdx.x;
+    const int ty = threadIdx.y;
+    const int bx = blockDim.x;
+    const int by = blockDim.y;
 
-    // loop over horizontal strip
-    for (int i = 0; i < ELEMS_PER_THREAD_X; ++i) {
-        int x = x_start + i;
+    // Compute global start coords for this tile (without halo)
+    // Tile width is blockDim.x * ELEMS_PER_THREAD_X horizontally
+    const int tile_w = bx * ELEMS_PER_THREAD_X;
+    const int tile_h = by;
 
-        if (x >= grid_size || y >= grid_size) return;  // outside domain
+    const int gx0 = blockIdx.x * tile_w;
+    const int gy0 = blockIdx.y * tile_h;
 
-        int idx = y * grid_size + x;
+    // Shared memory tile includes halo (1 cell border)
+    // So shared memory size: (tile_w + 2) * (tile_h + 2)
+    extern __shared__ double sTile[];
 
-        // Apply Dirichlet boundary conditions
-        if (x == 0 || x == grid_size - 1 || y == 0 || y == grid_size - 1) {
-            T_new[idx] = T_amb;
+    const int sTile_w = tile_w + 2;
+    const int sTile_h = tile_h + 2;
+
+    // Each thread loads multiple elements into shared memory cooperatively
+    // Number of elements in shared tile
+    const int sTile_size = sTile_w * sTile_h;
+
+    // Flattened thread id inside block
+    const int tid = ty * bx + tx;
+    const int block_threads = bx * by;
+
+    // Cooperative loading of the shared tile + halo from global memory
+    for (int i = tid; i < sTile_size; i += block_threads)
+    {
+        int sy = i / sTile_w;  // shared mem y
+        int sx = i % sTile_w;  // shared mem x
+
+        // Map shared mem coords to global coords (halo offset -1)
+        int gx = gx0 + (sx - 1);
+        int gy = gy0 + (sy - 1);
+
+        double val = T_amb; // default ambient for out of bounds
+
+        if (gx >= 0 && gx < grid_size && gy >= 0 && gy < grid_size)
+        {
+            val = T[gy * grid_size + gx];
+        }
+
+        sTile[sy * sTile_w + sx] = val;
+    }
+
+    __syncthreads();
+
+    // Now each thread computes ELEMS_PER_THREAD_X elements horizontally
+
+    // y coord inside tile for this thread
+    int local_y = ty;
+    int global_y = gy0 + local_y;
+
+    if (global_y >= grid_size) return; // outside grid vertically
+
+    // Start x for this thread inside tile
+    int local_x_start = tx * ELEMS_PER_THREAD_X;
+
+    for (int i = 0; i < ELEMS_PER_THREAD_X; ++i)
+    {
+        int local_x = local_x_start + i;
+        int global_x = gx0 + local_x;
+
+        // Check if inside grid horizontally
+        if (global_x >= grid_size) continue;
+
+        // Apply Dirichlet boundary conditions on edges
+        if (global_x == 0 || global_x == grid_size - 1 ||
+            global_y == 0 || global_y == grid_size - 1)
+        {
+            T_new[global_y * grid_size + global_x] = T_amb;
             continue;
         }
 
-        // Compute 1D indices for neighbors
-        int top    = idx - grid_size;
-        int bottom = idx + grid_size;
-        int left   = idx - 1;
-        int right  = idx + 1;
+        // Index inside shared tile (+1 offset for halo)
+        int sc = (local_y + 1) * sTile_w + (local_x + 1);
 
-        double coeff = hh_over_k * q[idx];
+        // Fetch neighbors from shared memory
+        double top    = sTile[sc - sTile_w];
+        double bottom = sTile[sc + sTile_w];
+        double left   = sTile[sc - 1];
+        double right  = sTile[sc + 1];
 
-        // stencil update
-        T_new[idx] = (T[top] + T[bottom] + T[left] + T[right] + coeff) * 0.25;
+        double coeff = (h * h / k) * q[global_y * grid_size + global_x];
+
+        double newT = (top + bottom + left + right + coeff) * 0.25;
+
+        T_new[global_y * grid_size + global_x] = newT;
     }
 }
 
-
-// Kernel for reduction to find maximum difference
-__global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, int total_size) {
-    __shared__ double data[256];
-    int local_index = threadIdx.y * blockDim.x + threadIdx.x;
-    int global_index = blockIdx.x * blockDim.x * blockDim.y + local_index;
-
-
-    // Compute difference for each thread
-    double difference = 0.0;
-    if (global_index < total_size) {
-        difference = fabs(T_new[global_index] - T[global_index]);
-    }
-
-    data[local_index] = difference;
-    __syncthreads();
-
-    // Max reduction
-    for (int stride = 128; stride > 0; stride /= 2) {
-        if (local_index  < stride) {
-            data[local_index] = fmax(data[local_index], data[local_index + stride]);
-        }
-        __syncthreads();
-    }
-
-    // Return the maximum difference at index 0
-    if (local_index  == 0) {
-        max_diff[blockIdx.x] = data[0];
-    }
-}
 
 
 // Compute the maximum, minimum, and average temperature in the grid

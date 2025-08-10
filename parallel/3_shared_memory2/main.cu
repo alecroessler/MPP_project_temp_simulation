@@ -114,20 +114,18 @@ int main(int argc, char* argv[])
     ////////////////////////////////////////////////////
     int BX = 16;
     int BY = 16;
+    constexpr int ELEMS_PER_THREAD_X = 4;
+
     dim3 block(BX, BY);
+
+    // Grid covers entire domain horizontally & vertically, accounting for ELEMS_PER_THREAD_X
     dim3 grid(
         (GRID_SIZE + BX * ELEMS_PER_THREAD_X - 1) / (BX * ELEMS_PER_THREAD_X),
-        (GRID_SIZE + BY - 1) / BY
-    );
+        (GRID_SIZE + BY - 1) / BY);
 
+    // Shared memory size in bytes
+    size_t shared_mem_bytes = sizeof(double) * ((BX * ELEMS_PER_THREAD_X) + 2) * (BY + 2);
 
-    // compute shared memory sizes (in doubles)
-    int tile_w = BX + 2;
-    int tile_h = BY + 2;
-    int tile_size = tile_w * tile_h;   // number of doubles for tile (including halo)
-    int block_elems = BX * BY;         // number of doubles for reduction
-
-    size_t shared_bytes = sizeof(double) * (tile_size + block_elems);
     /////////////////////////////////////////////////////
 
 
@@ -136,7 +134,8 @@ int main(int argc, char* argv[])
     for (iter = 0; iter < ITERATIONS; iter++) {
         startTime(&timer_kernel);
         // launch kernel
-        compute_temperature<<<grid, block>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
+        compute_temperature_shared_tiled_multi<<<grid, block, shared_mem_bytes>>>(
+    T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
         stopTime(&timer_kernel); t_kernel += elapsedTime(timer_kernel);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
