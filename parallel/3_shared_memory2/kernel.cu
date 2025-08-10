@@ -4,7 +4,7 @@
 
 #define ELEMS_PER_THREAD_X 4  // tune this (2, 4, maybe 8)
 
-__global__ void compute_temperature_multiX(
+__global__ void compute_temperature(
     const double* T,
     double* T_new,
     const double* q,
