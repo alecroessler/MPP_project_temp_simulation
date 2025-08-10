@@ -110,6 +110,35 @@ void compute_temperature_shared_tiled_multi(
     }
 }
 
+// Kernel for reduction to find maximum difference
+__global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, int total_size) {
+    __shared__ double data[256];
+    int local_index = threadIdx.y * blockDim.x + threadIdx.x;
+    int global_index = blockIdx.x * blockDim.x * blockDim.y + local_index;
+
+
+    // Compute difference for each thread
+    double difference = 0.0;
+    if (global_index < total_size) {
+        difference = fabs(T_new[global_index] - T[global_index]);
+    }
+
+    data[local_index] = difference;
+    __syncthreads();
+
+    // Max reduction
+    for (int stride = 128; stride > 0; stride /= 2) {
+        if (local_index  < stride) {
+            data[local_index] = fmax(data[local_index], data[local_index + stride]);
+        }
+        __syncthreads();
+    }
+
+    // Return the maximum difference at index 0
+    if (local_index  == 0) {
+        max_diff[blockIdx.x] = data[0];
+    }
+}
 
 
 // Compute the maximum, minimum, and average temperature in the grid
