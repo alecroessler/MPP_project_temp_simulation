@@ -121,9 +121,7 @@ int main(int argc, char* argv[])
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
 
-        startTime(&timer_copy);
-        cudaMemcpy(max_diff_h, max_diff_d, sizeof(double) * BLOCKS, cudaMemcpyDeviceToHost);
-        stopTime(&timer_copy); t_copy += elapsedTime(timer_copy);
+        
 
         /*
         // Launch reduction kernel to compute maximum difference
@@ -131,6 +129,7 @@ int main(int argc, char* argv[])
         max_diff_reduction<<<BLOCKS, blockDim>>>(T_d, T_new_d, max_diff_d, total_size);
         cudaDeviceSynchronize();
         stopTime(&timer_max_device); t_max_device += elapsedTime(timer_max_device);
+        */
 
         // Copy max_diff_d from device to host
         startTime(&timer_copy);
@@ -146,7 +145,7 @@ int main(int argc, char* argv[])
             }
         }
         stopTime(&timer_max_host); t_max_host += elapsedTime(timer_max_host);
-        */
+        
         // Check for convergence
         if (max_change < 1e-3) {
             printf("Converged after %d iterations\n", iter);
