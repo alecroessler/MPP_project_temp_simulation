@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
         }
         
         // Swap T and T_new pointers
-        double* temp = T_d;
+        float* temp = T_d;
         T_d = T_new_d;
         T_new_d = temp;
     }
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
     printf("Copying data from device to host..."); fflush(stdout);
     startTime(&timer);
 
-    cuda_ret = cudaMemcpy(T_new_h, T_new_d, sizeof(double)*total_size, cudaMemcpyDeviceToHost);
+    cuda_ret = cudaMemcpy(T_new_h, T_new_d, sizeof(float)*total_size, cudaMemcpyDeviceToHost);
     if(cuda_ret != cudaSuccess) FATAL("Unable to copy memory from device");
 
     cudaDeviceSynchronize();
