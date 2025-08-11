@@ -1,0 +1,123 @@
+To extract the GPU hardware information that is used on the node for Kodiak, the deviceQuery.cpp file was downloaded from Nvidia's CUDA Examples GitHub repository [6]. After running this, the following information relating to occupancy can be found.
+
+\[
+\begin{array}{l l}
+\text{GPU} & \text{NVIDIA L40S} \\
+\text{Max threads per SM} & 1536 \\
+\text{Max threads per block} & 1024 \\
+\text{Registers per SM} & 65,536 \\
+\text{Shared memory per block} & 49,152 \text{ bytes} \\
+\text{Shared memory per SM} & 102,400 \text{ bytes} \\
+\text{Number of SMs} & 142 \\
+\text{Warp size} & 32 \\
+\text{Max warps per SM} & \frac{1536}{32} = 48 \\
+\end{array}
+\]
+
+
+For our specific kernels, we can determine the requirements by the following command.
+\begin{lstlisting}[language = C]
+nvcc --ptxas-options=-v kernel.cu
+\end{lstlisting}
+
+Resulting in:
+
+\begin{itemize}
+    \item \texttt{max\_diff\_reduction}: 
+    \begin{itemize}
+        \item \textbf{Registers per thread:} 16
+        \item \textbf{Shared memory:} 2048 bytes
+        \item \textbf{Constant memory:} 348 bytes
+    \end{itemize}
+    \item \texttt{compute\_temperature}:
+    \begin{itemize}
+        \item \textbf{Registers per thread:} 27
+        \item \textbf{Constant memory:} 376 bytes (cmem[0]), 36 bytes (cmem[2])
+    \end{itemize}
+\end{itemize}
+
+
+\noindent GPU limits used for all calculations:
+\[
+\text{Registers/SM} = 65536,\qquad
+\text{Shared mem/SM} = 102400\ \text{bytes},\qquad
+\text{Max threads/SM} = 1536
+\]
+
+\bigskip
+\noindent\textbf{1) \texttt{max\_diff\_reduction}} \\
+\noindent (from \texttt{ptxas}): \(\text{Registers/thread} = 16,\ \text{Shared mem/block} = 2048\ \text{bytes}\).
+
+\medskip
+\noindent\textbf{Case A: 256 threads/block}
+\begin{align*}
+\text{Registers limit} &= \left\lfloor \dfrac{65536}{16 \times 256} \right\rfloor
+= \left\lfloor \dfrac{65536}{4096} \right\rfloor = 16\ \text{blocks/SM} \\
+\text{Shared-mem limit} &= \left\lfloor \dfrac{102400}{2048} \right\rfloor
+= \left\lfloor 50 \right\rfloor = 50\ \text{blocks/SM} \\
+\text{Threads limit} &= \left\lfloor \dfrac{1536}{256} \right\rfloor
+= 6\ \text{blocks/SM} \\
+\text{Max concurrent blocks/SM} &= \min(16,\,50,\,6) = 6
+\end{align*}
+
+\bigskip
+\noindent\textbf{2) \texttt{compute\_temperature}} \\
+\noindent (from \texttt{ptxas}): \(\text{Registers/thread} = 27,\ \text{Shared mem/block} \approx 0\ \text{bytes}\) (no significant dynamic shared mem reported).
+
+\medskip
+\noindent\textbf{Case A: 256 threads/block}
+\begin{align*}
+\text{Registers limit} &= \left\lfloor \dfrac{65536}{27 \times 256} \right\rfloor
+= \left\lfloor \dfrac{65536}{6912} \right\rfloor = 9\ \text{blocks/SM} \\
+\text{Shared-mem limit} &= \text{not limiting (0 B used)} \\
+\text{Threads limit} &= \left\lfloor \dfrac{1536}{256} \right\rfloor = 6\ \text{blocks/SM} \\
+\text{Max concurrent blocks/SM} &= \min(9,\,\infty,\,6) = 6
+\end{align*}
+
+\bigskip
+\noindent\textbf{Interpretation:}
+\begin{itemize}
+  \item With 256 threads/block both kernels are \emph{thread-limited} to 6 blocks/SM (even though register limits differ).
+  \item Reducing to 128 threads/block increases concurrent blocks/SM to 12 for both kernels, improving the number of resident blocks (better latency hiding).
+  \item For \texttt{max\_diff\_reduction}, shared memory is not the bottleneck; registers also cease to be the limiting factor at 128 threads/block.
+\end{itemize}
+
+Given:
+\[
+\text{Warp size} = 32, \quad \text{Max warps per SM} = \frac{1536}{32} = 48
+\]
+
+\noindent For each kernel, occupancy is calculated as:
+\[
+\text{Occupancy} = \frac{\text{Active warps per SM}}{\text{Max warps per SM}} = \frac{\text{Max blocks per SM} \times \frac{\text{Threads per block}}{\text{Warp size}}}{48}
+\]
+
+\vspace{1em}
+\noindent \textbf{Kernel 1: \texttt{max\_diff\_reduction}}  
+\[
+\begin{aligned}
+\text{Max blocks per SM} &= 6 \\
+\text{Active warps per SM} &= 6 \times \frac{256}{32} = 6 \times 8 = 48 \\
+\text{Occupancy} &= \frac{48}{48} = 1.0 = 100\%
+\end{aligned}
+\]
+
+\vspace{1em}
+\noindent \textbf{Kernel 2: \texttt{compute\_temperature}}  
+\[
+\begin{aligned}
+\text{Max blocks per SM} &= 3 \\
+\text{Active warps per SM} &= 3 \times \frac{256}{32} = 3 \times 8 = 24 \\
+\text{Occupancy} &= \frac{24}{48} = 0.5 = 50\%
+\end{aligned}
+\]
+
+\vspace{1em}
+\noindent \textbf{Summary:}  
+- \texttt{max\_diff\_reduction} kernel achieves full occupancy at 256 threads/block.  
+- \texttt{compute\_temperature} kernel is limited to 50\% occupancy, suggesting register or shared memory constraints may limit concurrent blocks.
+
+
+
+\subsubsection{Changes Made}
+\subsubsection{Performance Analysis}

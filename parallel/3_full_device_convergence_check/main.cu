@@ -111,31 +111,12 @@ int main(int argc, char* argv[])
     dim3 blockDim(16, 16);
     dim3 gridDim((GRID_SIZE + blockDim.x - 1) / blockDim.x, (GRID_SIZE + blockDim.y - 1) / blockDim.y);
 
-    ////////////////////////////////////////////////////
-    int BX = 16;
-    int BY = 16;
-    constexpr int ELEMS_PER_THREAD_X = 4;
-
-    dim3 block(BX, BY);
-
-    // Grid covers entire domain horizontally & vertically, accounting for ELEMS_PER_THREAD_X
-    dim3 grid(
-        (GRID_SIZE + BX * ELEMS_PER_THREAD_X - 1) / (BX * ELEMS_PER_THREAD_X),
-        (GRID_SIZE + BY - 1) / BY);
-
-    // Shared memory size in bytes
-    size_t shared_mem_bytes = sizeof(double) * ((BX * ELEMS_PER_THREAD_X) + 2) * (BY + 2);
-
-    /////////////////////////////////////////////////////
-
 
     // Launch the kernel
     int iter;
     for (iter = 0; iter < ITERATIONS; iter++) {
         startTime(&timer_kernel);
-        // launch kernel
-        compute_temperature_shared_tiled_multi<<<grid, block, shared_mem_bytes>>>(
-    T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
+        compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
         stopTime(&timer_kernel); t_kernel += elapsedTime(timer_kernel);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
@@ -146,6 +127,16 @@ int main(int argc, char* argv[])
         cudaDeviceSynchronize();
         stopTime(&timer_max_device); t_max_device += elapsedTime(timer_max_device);
 
+        // Launch second reduction kernel to find the final maximum difference
+        startTime(&timer_max_host);
+        max_diff_final_reduction<<<1, 256>>>(d_partial_max, d_final_max, BLOCKS);
+        stopTime(&timer_max_host); t_max_host += elapsedTime(timer_max_host);
+
+        // Copy result from device to host
+        startTime(&timer_copy);
+        cudaMemcpy(&max_change, d_final_max, sizeof(double), cudaMemcpyDeviceToHost);   
+        stopTime(&timer_copy); t_copy += elapsedTime(timer_copy);
+        /*
         // Copy max_diff_d from device to host
         startTime(&timer_copy);
         cudaMemcpy(max_diff_h, max_diff_d, sizeof(double) * BLOCKS, cudaMemcpyDeviceToHost);
@@ -160,6 +151,8 @@ int main(int argc, char* argv[])
             }
         }
         stopTime(&timer_max_host); t_max_host += elapsedTime(timer_max_host);
+        */
+
         
         // Check for convergence
         if (max_change < 1e-3) {
@@ -211,8 +204,8 @@ int main(int argc, char* argv[])
     cudaFree(T_new_d);
 
     printf("Reduce Temperature kernel time for convergence check: %.5f s\n", t_max_device);
-    printf("Copy reduced Temperature to host for convergence check: %.5f s\n", t_copy);
-    printf("Reduce Temperature further on host for convergence check: %.5f s\n", t_max_host);
+    printf("Second reduction kernel for final maximum temperature: %.5f s\n", t_max_host);
+     printf("Copy the final device reducded max temperature change to host: %.5f s\n", t_copy);
     printf("Kernel algorithm for temperature computation execution time: %.5f s\n", t_kernel);
 
     stopTime(&total_timer); printf("Total Execution Time: %f s\n", elapsedTime(total_timer));
