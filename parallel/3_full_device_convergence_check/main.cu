@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
 
         
         // Check for convergence
-        if (max_change < 1e-3) {
+        if (*max_change < 1e-3) {
             printf("Converged after %d iterations\n", iter);
             break;
         }
