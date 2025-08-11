@@ -48,17 +48,11 @@ int main(int argc, char* argv[])
     startTime(&timer);
 
     double *q_h, *T_h, *T_new_h, *max_diff_h;
-    //double *q_h;
-    //float *T_h, *T_new_h, *max_diff_h;
 
     q_h = (double*) malloc( sizeof(double) * total_size );
     T_h = (double*) malloc( sizeof(double) * total_size );
     T_new_h = (double*) malloc( sizeof(double) * total_size );
     max_diff_h = (double*) malloc(sizeof(double) * BLOCKS);
-
-    //T_h = (float*) malloc( sizeof(float) * total_size );
-    //T_new_h = (float*) malloc( sizeof(float) * total_size );
-    //max_diff_h = (float*) malloc(sizeof(float) * BLOCKS);
 
 
     for (unsigned int i=0; i < total_size; i++) { T_new_h[i] = T_amb; T_h[i] = T_amb; }
@@ -76,10 +70,6 @@ int main(int argc, char* argv[])
 
     double *q_d, *T_d, *T_new_d, *max_diff_d;
 
-    //double *q_d;
-    //float *T_d, *T_new_d, *max_diff_d;
-
-    /*
     // CUDA device variables for q, T, and T_new
     cuda_ret = cudaMalloc((void**)&q_d, sizeof(double)* total_size);
     if(cuda_ret != cudaSuccess) FATAL("Unable to allocate device memory for q_d");
@@ -92,18 +82,7 @@ int main(int argc, char* argv[])
 
     // Allocate device variable for max_diff
     cudaMalloc(&max_diff_d, BLOCKS * sizeof(double));
-    */
-    cuda_ret = cudaMalloc((void**)&q_d, sizeof(double)* total_size);
-    if(cuda_ret != cudaSuccess) FATAL("Unable to allocate device memory for q_d");
 
-    cuda_ret = cudaMalloc((void**)&T_d, sizeof(double)* total_size);
-    if(cuda_ret != cudaSuccess) FATAL("Unable to allocate device memory for T_d");
-
-    cuda_ret = cudaMalloc((void**)&T_new_d, sizeof(double)* total_size);
-    if(cuda_ret != cudaSuccess) FATAL("Unable to allocate device memory for T_new_d");
-
-    // Allocate device variable for max_diff
-    cudaMalloc(&max_diff_d, BLOCKS * sizeof(double));
 
 
     cudaDeviceSynchronize();
@@ -137,11 +116,12 @@ int main(int argc, char* argv[])
     int iter;
     for (iter = 0; iter < ITERATIONS; iter++) {
         startTime(&timer_kernel);
-        compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb);
+        compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb, max_diff_d);
         stopTime(&timer_kernel); t_kernel += elapsedTime(timer_kernel);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
 
+        /*
         // Launch reduction kernel to compute maximum difference
         startTime(&timer_max_device);
         max_diff_reduction<<<BLOCKS, blockDim>>>(T_d, T_new_d, max_diff_d, total_size);
@@ -162,7 +142,7 @@ int main(int argc, char* argv[])
             }
         }
         stopTime(&timer_max_host); t_max_host += elapsedTime(timer_max_host);
-        
+        */
         // Check for convergence
         if (max_change < 1e-3) {
             printf("Converged after %d iterations\n", iter);
@@ -188,9 +168,9 @@ int main(int argc, char* argv[])
     cudaDeviceSynchronize();
     stopTime(&timer); printf("%f s\n", elapsedTime(timer));
 
-    float max_temp_T = max_temp(T_new_h, GRID_SIZE);
-    float min_temp_T = min_temp(T_new_h, GRID_SIZE);
-    float avg_temp_T = avg_temp(T_new_h, GRID_SIZE);
+    double max_temp_T = max_temp(T_new_h, GRID_SIZE);
+    double min_temp_T = min_temp(T_new_h, GRID_SIZE);
+    double avg_temp_T = avg_temp(T_new_h, GRID_SIZE);
 
     printf("Max Temp: %.2f C\n", max_temp_T);
     printf("Min Temp: %.2f C\n", min_temp_T);
