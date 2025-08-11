@@ -84,8 +84,6 @@ int main(int argc, char* argv[])
     // Allocate device variable for max_diff
     cudaMalloc(&max_diff_d, BLOCKS * sizeof(double));
 
-
-
     cudaDeviceSynchronize();
     stopTime(&timer); printf("%f s\n", elapsedTime(timer));
 
@@ -117,7 +115,8 @@ int main(int argc, char* argv[])
     int iter;
     for (iter = 0; iter < ITERATIONS; iter++) {
         startTime(&timer_kernel);
-        compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, coeff, GRID_SIZE, h, T_amb, max_diff_d);
+        compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, coeff, GRID_SIZE, T_amb, max_diff_d);
+        cuda_ret = cudaDeviceSynchronize();
         stopTime(&timer_kernel); t_kernel += elapsedTime(timer_kernel);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");

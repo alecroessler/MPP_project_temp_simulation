@@ -1,6 +1,6 @@
 // Kernel algorithm for temperature computation
 __global__ void compute_temperature(double* T, double* T_new, double* q, double coeff, 
-    int grid_size, double h, double T_amb, double* max_diff_per_block) {
+    int grid_size, double T_amb, double* max_diff_per_block) {
 
     // 2D indices
     int x = blockIdx.x * blockDim.x + threadIdx.x;
