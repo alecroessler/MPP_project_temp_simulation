@@ -121,6 +121,10 @@ int main(int argc, char* argv[])
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
 
+        startTime(&timer_copy);
+        cudaMemcpy(max_diff_h, max_diff_d, sizeof(double) * BLOCKS, cudaMemcpyDeviceToHost);
+        stopTime(&timer_copy); t_copy += elapsedTime(timer_copy);
+
         /*
         // Launch reduction kernel to compute maximum difference
         startTime(&timer_max_device);
