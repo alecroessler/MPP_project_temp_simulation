@@ -179,15 +179,17 @@ int main(int argc, char* argv[])
     free(q_h);
     free(T_h);
     free(T_new_h);
+    free(max_diff_h);
 
     // Free device variables
     cudaFree(q_d);
     cudaFree(T_d);
     cudaFree(T_new_d);
+    cudaFree(max_diff_d);
 
     printf("Copy reduced Temperature to host for convergence check: %.5f s\n", t_copy);
     printf("Reduce Temperature further on host for convergence check: %.5f s\n", t_max_host);
-    printf("Kernel algorithm for temperature computation execution time: %.5f s\n", t_kernel);
+    printf("Kernel execution time: %.5f s\n", t_kernel);
 
     stopTime(&total_timer); printf("Total Execution Time: %f s\n", elapsedTime(total_timer));
 
