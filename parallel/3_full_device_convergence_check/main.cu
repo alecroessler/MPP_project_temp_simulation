@@ -47,12 +47,13 @@ int main(int argc, char* argv[])
     printf("\nSetting up the problem..."); fflush(stdout);
     startTime(&timer);
 
-    double *q_h, *T_h, *T_new_h, *max_diff_h;
+    double *q_h, *T_h, *T_new_h, *max_diff_h, *max_change;
 
     q_h = (double*) malloc( sizeof(double) * total_size );
     T_h = (double*) malloc( sizeof(double) * total_size );
     T_new_h = (double*) malloc( sizeof(double) * total_size );
     max_diff_h = (double*) malloc(sizeof(double) * BLOCKS);
+    max_change = (double*) malloc(sizeof(double));
 
 
     for (unsigned int i=0; i < total_size; i++) { T_new_h[i] = T_amb; T_h[i] = T_amb; }
