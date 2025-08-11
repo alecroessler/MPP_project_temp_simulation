@@ -59,21 +59,21 @@ __global__ void max_diff_reduction(float* T, float* T_new, float* max_diff, int 
 
 
 // Compute the maximum, minimum, and average temperature in the grid
-double max_temp(double* arr, int grid_size) {
+double max_temp(float* arr, int grid_size) {
     double max_val = arr[0];
     for (int i = 0; i < grid_size * grid_size; i++) {
         if (arr[i] > max_val) max_val = arr[i];
     }
     return max_val;  
 }
-double min_temp(double* arr, int grid_size) {
+double min_temp(float* arr, int grid_size) {
     double min_val = arr[0];
     for (int i = 0; i < grid_size * grid_size; i++) {
         if (arr[i] < min_val) min_val = arr[i];
     }
     return min_val;
 }
-double avg_temp(double* arr, int grid_size) {
+double avg_temp(float* arr, int grid_size) {
     double sum = 0.0;
     for (int i = 0; i < grid_size * grid_size; i++) {
         sum += arr[i];
