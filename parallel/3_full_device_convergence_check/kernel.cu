@@ -1,5 +1,5 @@
 // Kernel algorithm for temperature computation
-__global__ void compute_temperature(double* T, double* T_new, double* q, double k, 
+__global__ void compute_temperature(double* T, double* T_new, double* q, double coeff, 
     int grid_size, double h, double T_amb, double* max_diff_per_block) {
 
     // 2D indices
@@ -24,7 +24,7 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
             int left   = y * grid_size + (x - 1);
             int right  = y * grid_size + (x + 1);
             
-            double coeff = (h * h / k) * q[idx];
+            double coeff = coeff * q[idx];
             T_new[idx] = (T[top] + T[bottom] + T[left] + T[right] + coeff) / 4.0;
         }
         diff = fabs(T_new[idx] - T[idx]);
@@ -45,36 +45,6 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
     if (local_idx == 0) {
         int block_id = blockIdx.y * gridDim.x + blockIdx.x;
         max_diff_per_block[block_id] = sdata[0];
-    }
-}
-
-// Kernel for reduction to find maximum difference
-__global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, int total_size) {
-    __shared__ double data[256];
-    int local_index = threadIdx.y * blockDim.x + threadIdx.x;
-    int global_index = blockIdx.x * blockDim.x * blockDim.y + local_index;
-
-
-    // Compute difference for each thread
-    double difference = 0.0;
-    if (global_index < total_size) {
-        difference = fabs(T_new[global_index] - T[global_index]);
-    }
-
-    data[local_index] = difference;
-    __syncthreads();
-
-    // Max reduction
-    for (int stride = 128; stride > 0; stride /= 2) {
-        if (local_index  < stride) {
-            data[local_index] = fmax(data[local_index], data[local_index + stride]);
-        }
-        __syncthreads();
-    }
-
-    // Return the maximum difference at index 0
-    if (local_index  == 0) {
-        max_diff[blockIdx.x] = data[0];
     }
 }
 

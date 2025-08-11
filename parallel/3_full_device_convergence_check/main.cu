@@ -12,6 +12,7 @@ const int ITERATIONS = 50000;
 const double DIE_WIDTH_M = 0.016;
 const double h = DIE_WIDTH_M / GRID_SIZE;  
 const double k = 150.0; // thermal conductivity (using silicon)
+double coeff = (h * h / k); 
 
 // For reduction kernel: hardcoded since we know the values and can keep structure of program in tact
 const int THREADS_PER_BLOCK = 256; // blockDim.x * blockDim.y
@@ -116,20 +117,10 @@ int main(int argc, char* argv[])
     int iter;
     for (iter = 0; iter < ITERATIONS; iter++) {
         startTime(&timer_kernel);
-        compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, k, GRID_SIZE, h, T_amb, max_diff_d);
+        compute_temperature<<<gridDim, blockDim>>>(T_d, T_new_d, q_d, coeff, GRID_SIZE, h, T_amb, max_diff_d);
         stopTime(&timer_kernel); t_kernel += elapsedTime(timer_kernel);
         cuda_ret = cudaGetLastError();
         if(cuda_ret != cudaSuccess) FATAL("Unable to launch kernel");
-
-        
-
-        /*
-        // Launch reduction kernel to compute maximum difference
-        startTime(&timer_max_device);
-        max_diff_reduction<<<BLOCKS, blockDim>>>(T_d, T_new_d, max_diff_d, total_size);
-        cudaDeviceSynchronize();
-        stopTime(&timer_max_device); t_max_device += elapsedTime(timer_max_device);
-        */
 
         // Copy max_diff_d from device to host
         startTime(&timer_copy);
@@ -195,7 +186,6 @@ int main(int argc, char* argv[])
     cudaFree(T_d);
     cudaFree(T_new_d);
 
-    printf("Reduce Temperature kernel time for convergence check: %.5f s\n", t_max_device);
     printf("Copy reduced Temperature to host for convergence check: %.5f s\n", t_copy);
     printf("Reduce Temperature further on host for convergence check: %.5f s\n", t_max_host);
     printf("Kernel algorithm for temperature computation execution time: %.5f s\n", t_kernel);
