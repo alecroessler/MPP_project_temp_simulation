@@ -47,12 +47,18 @@ int main(int argc, char* argv[])
     printf("\nSetting up the problem..."); fflush(stdout);
     startTime(&timer);
 
-    double *q_h, *T_h, *T_new_h, *max_diff_h;
+    //double *q_h, *T_h, *T_new_h, *max_diff_h;
+    double *q_h;
+    float *T_h, *T_new_h, *max_diff_h;
 
     q_h = (double*) malloc( sizeof(double) * total_size );
-    T_h = (double*) malloc( sizeof(double) * total_size );
-    T_new_h = (double*) malloc( sizeof(double) * total_size );
-    max_diff_h = (double*) malloc(sizeof(double) * BLOCKS);
+    //T_h = (double*) malloc( sizeof(double) * total_size );
+    //T_new_h = (double*) malloc( sizeof(double) * total_size );
+    //max_diff_h = (double*) malloc(sizeof(double) * BLOCKS);
+
+    T_h = (float*) malloc( sizeof(float) * total_size );
+    T_new_h = (float*) malloc( sizeof(float) * total_size );
+    max_diff_h = (float*) malloc(sizeof(float) * BLOCKS);
 
 
     for (unsigned int i=0; i < total_size; i++) { T_new_h[i] = T_amb; T_h[i] = T_amb; }
@@ -68,8 +74,12 @@ int main(int argc, char* argv[])
     printf("Allocating device variables..."); fflush(stdout);
     startTime(&timer);
 
-    double *q_d, *T_d, *T_new_d, *max_diff_d;
+    //double *q_d, *T_d, *T_new_d, *max_diff_d;
 
+    double *q_d;
+    float *T_d, *T_new_d, *max_diff_d;
+
+    /*
     // CUDA device variables for q, T, and T_new
     cuda_ret = cudaMalloc((void**)&q_d, sizeof(double)* total_size);
     if(cuda_ret != cudaSuccess) FATAL("Unable to allocate device memory for q_d");
@@ -82,7 +92,18 @@ int main(int argc, char* argv[])
 
     // Allocate device variable for max_diff
     cudaMalloc(&max_diff_d, BLOCKS * sizeof(double));
+    */
+    cuda_ret = cudaMalloc((void**)&q_d, sizeof(double)* total_size);
+    if(cuda_ret != cudaSuccess) FATAL("Unable to allocate device memory for q_d");
 
+    cuda_ret = cudaMalloc((void**)&T_d, sizeof(float)* total_size);
+    if(cuda_ret != cudaSuccess) FATAL("Unable to allocate device memory for T_d");
+
+    cuda_ret = cudaMalloc((void**)&T_new_d, sizeof(float)* total_size);
+    if(cuda_ret != cudaSuccess) FATAL("Unable to allocate device memory for T_new_d");
+
+    // Allocate device variable for max_diff
+    cudaMalloc(&max_diff_d, BLOCKS * sizeof(float));
 
 
     cudaDeviceSynchronize();
@@ -96,9 +117,9 @@ int main(int argc, char* argv[])
     // Copy q, T, and T_new from host to device
     cuda_ret = cudaMemcpy(q_d, q_h, sizeof(double)*total_size, cudaMemcpyHostToDevice);
     if(cuda_ret != cudaSuccess) FATAL("Unable to copy q from host to device");
-    cuda_ret = cudaMemcpy(T_d, T_h, sizeof(double)*total_size, cudaMemcpyHostToDevice);
+    cuda_ret = cudaMemcpy(T_d, T_h, sizeof(float)*total_size, cudaMemcpyHostToDevice);
     if(cuda_ret != cudaSuccess) FATAL("Unable to copy T from host to device");
-    cuda_ret = cudaMemcpy(T_new_d, T_new_h, sizeof(double)*total_size, cudaMemcpyHostToDevice);
+    cuda_ret = cudaMemcpy(T_new_d, T_new_h, sizeof(float)*total_size, cudaMemcpyHostToDevice);
     if(cuda_ret != cudaSuccess) FATAL("Unable to copy T_new from host to device");
 
     cudaDeviceSynchronize();
