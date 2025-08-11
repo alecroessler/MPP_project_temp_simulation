@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     printf("Allocating device variables..."); fflush(stdout);
     startTime(&timer);
 
-    double *q_d, *T_d, *T_new_d, *max_diff_d;
+    double *q_d, *T_d, *T_new_d, *max_diff_d, *final_diff_d;
 
     // CUDA device variables for q, T, and T_new
     cuda_ret = cudaMalloc((void**)&q_d, sizeof(double)* total_size);
@@ -82,6 +82,9 @@ int main(int argc, char* argv[])
 
     // Allocate device variable for max_diff
     cudaMalloc(&max_diff_d, BLOCKS * sizeof(double));
+
+    // Allocate device variable for final maximum difference
+    cudaMalloc(&final_diff_d, sizeof(double));
 
 
 
@@ -129,7 +132,7 @@ int main(int argc, char* argv[])
 
         // Launch second reduction kernel to find the final maximum difference
         startTime(&timer_max_host);
-        max_diff_final_reduction<<<1, 256>>>(d_partial_max, d_final_max, BLOCKS);
+        max_diff_final_reduction<<<1, 256>>>(max_diff_d, final_diff_d, BLOCKS);
         stopTime(&timer_max_host); t_max_host += elapsedTime(timer_max_host);
 
         // Copy result from device to host
