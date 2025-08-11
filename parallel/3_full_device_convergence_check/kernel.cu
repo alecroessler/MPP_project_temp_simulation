@@ -1,5 +1,5 @@
 // Kernel algorithm for temperature computation
-__global__ void compute_temperature(double* T, double* T_new, double* q, double k, 
+__global__ void compute_temperature(double* T, double* T_new, const double* q, double k, 
     int grid_size, double h, double T_amb) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -52,33 +52,6 @@ __global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, i
     // Return the maximum difference at index 0
     if (local_index  == 0) {
         max_diff[blockIdx.x] = data[0];
-    }
-}
-
-
-// 
-__global__ void max_diff_final_reduction(double* max_diff, double* final_max_diff, int num_blocks) {
-    __shared__ double shared_max[256];
-
-    // Load block maximums into shared memory
-    if (threadIdx.x < num_blocks) {
-        shared_max[threadIdx.x] = max_diff[threadIdx.x];
-    } else {
-        shared_max[threadIdx.x] = 0.0; 
-    }
-    __syncthreads();
-
-    // Find global maximum
-    for (int stride = 128; stride > 0; stride /= 2) {
-        if (threadIdx.x < stride) {
-            shared_max[threadIdx.x] = fmax(shared_max[threadIdx.x], shared_max[threadIdx.x + stride]);
-        }
-        __syncthreads();
-    }
-
-    // Write the final result to global memory
-    if (threadIdx.x == 0) {
-        *final_max_diff = shared_max[0];
     }
 }
 

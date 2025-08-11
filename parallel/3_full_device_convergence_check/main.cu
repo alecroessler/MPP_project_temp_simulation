@@ -47,13 +47,12 @@ int main(int argc, char* argv[])
     printf("\nSetting up the problem..."); fflush(stdout);
     startTime(&timer);
 
-    double *q_h, *T_h, *T_new_h, *max_diff_h, *max_change;
+    double *q_h, *T_h, *T_new_h, *max_diff_h;
 
     q_h = (double*) malloc( sizeof(double) * total_size );
     T_h = (double*) malloc( sizeof(double) * total_size );
     T_new_h = (double*) malloc( sizeof(double) * total_size );
     max_diff_h = (double*) malloc(sizeof(double) * BLOCKS);
-    max_change = (double*) malloc(sizeof(double));
 
 
     for (unsigned int i=0; i < total_size; i++) { T_new_h[i] = T_amb; T_h[i] = T_amb; }
@@ -69,7 +68,7 @@ int main(int argc, char* argv[])
     printf("Allocating device variables..."); fflush(stdout);
     startTime(&timer);
 
-    double *q_d, *T_d, *T_new_d, *max_diff_d, *final_diff_d;
+    double *q_d, *T_d, *T_new_d, *max_diff_d;
 
     // CUDA device variables for q, T, and T_new
     cuda_ret = cudaMalloc((void**)&q_d, sizeof(double)* total_size);
@@ -83,9 +82,6 @@ int main(int argc, char* argv[])
 
     // Allocate device variable for max_diff
     cudaMalloc(&max_diff_d, BLOCKS * sizeof(double));
-
-    // Allocate device variable for final maximum difference
-    cudaMalloc(&final_diff_d, sizeof(double));
 
 
 
@@ -131,16 +127,6 @@ int main(int argc, char* argv[])
         cudaDeviceSynchronize();
         stopTime(&timer_max_device); t_max_device += elapsedTime(timer_max_device);
 
-        // Launch second reduction kernel to find the final maximum difference
-        startTime(&timer_max_host);
-        max_diff_final_reduction<<<1, 256>>>(max_diff_d, final_diff_d, BLOCKS);
-        stopTime(&timer_max_host); t_max_host += elapsedTime(timer_max_host);
-
-        // Copy result from device to host
-        startTime(&timer_copy);
-        cudaMemcpy(max_change, final_diff_d, sizeof(double), cudaMemcpyDeviceToHost);   
-        stopTime(&timer_copy); t_copy += elapsedTime(timer_copy);
-        /*
         // Copy max_diff_d from device to host
         startTime(&timer_copy);
         cudaMemcpy(max_diff_h, max_diff_d, sizeof(double) * BLOCKS, cudaMemcpyDeviceToHost);
@@ -155,11 +141,9 @@ int main(int argc, char* argv[])
             }
         }
         stopTime(&timer_max_host); t_max_host += elapsedTime(timer_max_host);
-        */
-
         
         // Check for convergence
-        if (*max_change < 1e-3) {
+        if (max_change < 1e-3) {
             printf("Converged after %d iterations\n", iter);
             break;
         }
@@ -208,8 +192,8 @@ int main(int argc, char* argv[])
     cudaFree(T_new_d);
 
     printf("Reduce Temperature kernel time for convergence check: %.5f s\n", t_max_device);
-    printf("Second reduction kernel for final maximum temperature: %.5f s\n", t_max_host);
-     printf("Copy the final device reducded max temperature change to host: %.5f s\n", t_copy);
+    printf("Copy reduced Temperature to host for convergence check: %.5f s\n", t_copy);
+    printf("Reduce Temperature further on host for convergence check: %.5f s\n", t_max_host);
     printf("Kernel algorithm for temperature computation execution time: %.5f s\n", t_kernel);
 
     stopTime(&total_timer); printf("Total Execution Time: %f s\n", elapsedTime(total_timer));
