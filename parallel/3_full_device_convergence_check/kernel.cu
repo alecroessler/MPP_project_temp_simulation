@@ -28,7 +28,7 @@ __global__ void compute_temperature(const float* T, float* T_new, const double* 
 }
 
 // Kernel for reduction to find maximum difference
-__global__ void max_diff_reduction(double* T, double* T_new, double* max_diff, int total_size) {
+__global__ void max_diff_reduction(float* T, float* T_new, float* max_diff, int total_size) {
     __shared__ double data[256];
     int local_index = threadIdx.y * blockDim.x + threadIdx.x;
     int global_index = blockIdx.x * blockDim.x * blockDim.y + local_index;
