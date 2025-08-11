@@ -24,7 +24,7 @@ __global__ void compute_temperature(double* T, double* T_new, double* q, double 
             int left   = y * grid_size + (x - 1);
             int right  = y * grid_size + (x + 1);
             
-            coeff * = q[idx];
+            coeff *= q[idx];
             T_new[idx] = (T[top] + T[bottom] + T[left] + T[right] + coeff) / 4.0;
         }
         diff = fabs(T_new[idx] - T[idx]);
