@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
 
         // Copy result from device to host
         startTime(&timer_copy);
-        cudaMemcpy(&max_change, d_final_max, sizeof(double), cudaMemcpyDeviceToHost);   
+        cudaMemcpy(max_change, final_diff_d, sizeof(double), cudaMemcpyDeviceToHost);   
         stopTime(&timer_copy); t_copy += elapsedTime(timer_copy);
         /*
         // Copy max_diff_d from device to host
