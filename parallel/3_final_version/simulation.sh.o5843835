@@ -1,0 +1,15 @@
+
+Setting up the problem...0.008359 s
+Allocating device variables...0.167481 s
+Copying data from host to device...0.000163 s
+Converged after 23754 iterations
+Copying data from device to host...0.000052 s
+Max Temp: 130.00 C
+Min Temp: 25.00 C
+Avg Temp: 52.32 C
+Verifying results...TEST PASSED
+
+Copy reduced Temperature to host for convergence check: 0.13406 s
+Reduce Temperature further on host for convergence check: 0.01033 s
+Kernel execution time: 0.19605 s
+Total Execution Time: 0.519761 s

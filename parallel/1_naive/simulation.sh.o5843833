@@ -1,0 +1,15 @@
+
+Setting up the problem...0.008356 s
+Allocating device variables...0.174400 s
+Copying data from host to device...0.000162 s
+Converged after 23754 iterations
+Copying data from device to host...0.000049 s
+Max Temp: 130.00 C
+Min Temp: 25.00 C
+Avg Temp: 52.32 C
+Verifying results...TEST PASSED
+
+Temperature array copy time to host for convergence check: 2.47238 s
+Time for finding maximum difference for convergence check: 0.92860 s
+Kernel execution time: 0.07447 s
+Total Execution Time: 3.662847 s
